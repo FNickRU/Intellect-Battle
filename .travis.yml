@@ -1,0 +1,26 @@
+language: c
+os:
+    - linux
+compiler:
+    - gcc
+install:
+    - sudo apt-get install libcunit1 libcunit1-doc libcunit1-dev
+script:
+    - make
+deploy:
+    provider: releases
+    api_key:
+        secure: $GITHUB_TOKEN
+    file:
+        - ./bin/out
+    skip_cleanup: true
+    on:
+        tags: true
+after_success:
+    - make test
+notifications:
+  email:
+    recipients:
+      - mayorov-s-a@yandex.ru
+    on_success: never
+    on_failure: always
