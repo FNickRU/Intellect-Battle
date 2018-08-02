@@ -1,22 +1,26 @@
-#include "../src/test.h"
+/**
+ * Tests for test.c.
+ */
 #include "CUnit/Basic.h"
+#include "test.h"
 
-int init_suite()
-{
-   return 0;
-}
+/**
+ * Test suit initialization function.
+ * @return 0
+ */
+int init_suite();
 
-int clean_suite()
-{
-   return 0;
-}
+/**
+ * Test suit finalization function.
+ * @return 0
+ */
+int clean_suite();
 
-void testPROCESS_ARGUMENTS()
-{
-    int argc = 1;
-    char *argv[] = {"out"};
-    CU_ASSERT(0 == process_arguments(argc, argv));
-}
+/**
+ * Example test.
+ * If process_arguments() returns 0, it's ok.
+ */
+void testPROCESS_ARGUMENTS();
 
 int main()
 {
@@ -44,4 +48,21 @@ int main()
     CU_cleanup_registry();
 
     return CU_get_error();
+}
+
+int init_suite()
+{
+   return 0;
+}
+
+int clean_suite()
+{
+   return 0;
+}
+
+void testPROCESS_ARGUMENTS()
+{
+    int argc = 1;
+    char *argv[] = {"out"};
+    CU_ASSERT(0 == process_arguments(argc, argv));
 }

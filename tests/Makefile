@@ -11,10 +11,10 @@ TEST_TEST = test_test.out
 TESTS = $(TEST_TEST)
 
 CC = gcc
-CFLAGS = -std=gnu99 -I.
+CFLAGS = -std=gnu99 -I$(SRC_DIR)
 
 LINK = gcc
-LFLAGS = -I. -lcunit
+LFLAGS = -lcunit
 
 .PHONY: all clean build run
 

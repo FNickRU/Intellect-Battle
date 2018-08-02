@@ -1,5 +1,5 @@
 /**
- * Тестовый пример.
+ * Example source file.
  */
  int process_arguments(int argc, char *argv[])
  {

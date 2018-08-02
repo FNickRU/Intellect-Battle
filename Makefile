@@ -14,10 +14,10 @@ OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 BIN = a.out
 
 CC = gcc
-CFLAGS = -std=gnu99 -I.
+CFLAGS = -std=gnu99
 
 LINK = gcc
-LFLAGS = -I.
+LFLAGS =
 
 .PHONY: all clean build test
 
