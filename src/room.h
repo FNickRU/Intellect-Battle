@@ -1,6 +1,8 @@
 /**
  * Room's interface.
  */
+#ifndef __ROOM_H
+#define __ROOM_H
 
 
 #include "headers/msg_struct.h"
@@ -54,3 +56,6 @@ int recvfrom_user(struct player user,
  * @return           0, if array shuffled successfully, else non-zero.
  */
 int unit_shuffle(int* idx_array, unsigned int size);
+
+
+#endif // __ROOM_H

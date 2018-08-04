@@ -1,6 +1,8 @@
 /**
  * Player structure definition.
  */
+#ifndef __PLAYER_H
+#define __PLAYER_H
 
 
 /**
@@ -14,3 +16,5 @@ struct player {
     int socket;
     char username[USERNAME_LEN];
 };
+
+#endif // __PLAYER_H

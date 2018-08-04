@@ -1,6 +1,8 @@
 /**
  * Message queue structures definitions.
  */
+#ifndef __MSG_STRUCT_H
+#define __MSG_STRUCT_H
 
 
 #include "player.h"
@@ -36,3 +38,6 @@ struct msg_w {
     unsigned int room_size;
     struct player player_info;
 };
+
+
+#endif // __MSG_STRUCT_H

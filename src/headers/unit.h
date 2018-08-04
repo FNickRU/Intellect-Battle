@@ -1,6 +1,8 @@
 /**
  * Question structure definition.
  */
+#ifndef __UNIT_H
+#define __UNIT_H
 
 
 /**
@@ -20,3 +22,5 @@ struct unit {
     char ans[ANS_COUNT][ANS_LEN];
     unsigned int rans;
 };
+
+#endif // __UNIT_H
