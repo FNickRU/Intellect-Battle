@@ -33,6 +33,6 @@ struct msg {
  */
 struct msg_w {
     long type;
-    int room_size;
-    struct player plyer_info;
+    unsigned int room_size;
+    struct player player_info;
 };

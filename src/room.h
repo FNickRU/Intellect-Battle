@@ -3,15 +3,25 @@
  */
 
 
-#include "msg_struct.h"
+#include "headers/msg_struct.h"
+#include "headers/unit.h"
 
 
 /**
- * Room's final state machine. Should run in thread.
+ * Information for room.
  * @param msgqid Message queue descriptor.
- * @param units  Array of questions.
+ * @param units  Pointer to unit's array.
  */
-void room_fsm(int msgqid, unit* units);
+struct room_info {
+    int msgqid;
+    struct unit *units;
+};
+
+/**
+ * Room's final state machine. Should run in thread.
+ * @param room_info Info to room. Should be convert to (struct room_info *).
+ */
+void room_fsm(void *room_info);
 
 
 /**
@@ -21,7 +31,8 @@ void room_fsm(int msgqid, unit* units);
  * @param  data_size Size of data.
  * @return           0, if data sended successfully, else non-zero.
  */
-int sendto_user(struct player user, void *data, unsigned int data_size);
+int sendto_user(struct player user,
+    void *data, unsigned int data_size);
 
 
 /**
@@ -32,7 +43,8 @@ int sendto_user(struct player user, void *data, unsigned int data_size);
  * @param  data_size Size of data to receive.
  * @return           0, if data received successfully, else non-zero.
  */
-int recvfrom_user(struct player user, void *data, unsigned int data_size);
+int recvfrom_user(struct player user,
+    void *data, unsigned int data_size);
 
 
 /**
@@ -41,4 +53,4 @@ int recvfrom_user(struct player user, void *data, unsigned int data_size);
  * @param  size      Size of array.
  * @return           0, if array shuffled successfully, else non-zero.
  */
-int shuffle(int* idx_array, unsigned int size);
+int unit_shuffle(int* idx_array, unsigned int size);

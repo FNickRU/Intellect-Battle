@@ -3,11 +3,11 @@
  */
 
 
-#include "msg_struct.h"
+#include "headers/msg_struct.h"
 
 
 /**
  * Worker's final state machine. Should run in thread.
- * @param msgqid Message queue descriptor.
+ * @param msgqid Message queue descriptor. Should be convert to (int *)
  */
-void worker_fsm(int msgqid);
+void worker_fsm(void *msgqid);
