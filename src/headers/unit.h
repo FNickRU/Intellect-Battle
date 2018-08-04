@@ -18,9 +18,13 @@
 #define ANS_LEN 80
 #define ANS_COUNT 4
 struct unit {
-    char quest[QUEST_LEN];
-    char ans[ANS_COUNT][ANS_LEN];
+    char *quest;
+    unsigned int q_len;
+    char *ans[ANS_COUNT];
+    unsigned int ans_len[ANS_COUNT];
     unsigned int rans;
+    struct unit *next;
+    struct unit *prev;
 };
 
 #endif // __UNIT_H

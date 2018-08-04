@@ -6,7 +6,7 @@
 
 
 /**
- * Structure of player. Workers is creating, rooms is using.
+ * Structure of player. Workers are creating, rooms are using.
  * @define USERNAME_LEN Length of player's nickname.
  * @param  socket       Socket's descriptor for connection with player.
  * @param  username     Player's nickname.

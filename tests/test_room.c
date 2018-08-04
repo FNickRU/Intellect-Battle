@@ -42,12 +42,6 @@ void test_recvfrom_user_data();
 void test_recvfrom_user_socket();
 
 
-/**
- * Test of unit_shuffle function. Check array's pointer is not NULL.
- */
-void test_unit_shuffle();
-
-
 int main()
 {
     CU_pSuite pSuite = NULL;
@@ -86,13 +80,6 @@ int main()
     if (NULL == CU_add_test(pSuite,
         "test of recvfrom_user() [socket]",
         test_recvfrom_user_socket)) {
-        CU_cleanup_registry();
-        return CU_get_error();
-    }
-
-    if (NULL == CU_add_test(pSuite,
-        "test of unit_shuffle() [array pointer]",
-        test_unit_shuffle)) {
         CU_cleanup_registry();
         return CU_get_error();
     }
@@ -146,11 +133,4 @@ void test_recvfrom_user_socket()
     char data[] = "NULL";
     unsigned int size = 5;
     CU_ASSERT(0 != recvfrom_user(user, (void *) data, size));
-}
-
-void test_unit_shuffle()
-{
-    int *array = NULL;
-    unsigned int size = 1;
-    CU_ASSERT(0 != unit_shuffle(array, size));
 }

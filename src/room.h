@@ -12,7 +12,7 @@
 /**
  * Information for room.
  * @param msgqid Message queue descriptor.
- * @param units  Pointer to unit's array.
+ * @param units  Pointer to unit's list.
  */
 struct room_info {
     int msgqid;
@@ -47,15 +47,6 @@ int sendto_user(struct player user,
  */
 int recvfrom_user(struct player user,
     void *data, unsigned int data_size);
-
-
-/**
- * Shuffle array of unit indexes.
- * @param  idx_array Pointer to index array.
- * @param  size      Size of array.
- * @return           0, if array shuffled successfully, else non-zero.
- */
-int unit_shuffle(int* idx_array, unsigned int size);
 
 
 #endif // __ROOM_H
