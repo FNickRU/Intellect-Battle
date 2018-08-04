@@ -23,7 +23,7 @@ LFLAGS =
 
 .PHONY: all clean build test
 
-all: $(DIRS) $(BIN_DIR)/$(BIN)
+all: deps $(DIRS) $(BIN_DIR)/$(BIN)
 
 build: clean all
 
