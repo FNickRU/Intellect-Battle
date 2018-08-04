@@ -19,13 +19,27 @@ struct pool {
 
 
 /**
+* This structure describes the question unit
+* with the answer options and the right answer.
+*/
+struct unit {
+    char *quest;
+    int qsize;
+    char *answers[4];
+    int asize[4];
+    int right_ans;
+};
+
+
+/**
  * This structure describes the configuration of the server.
  */
 struct server_conf {
     int socket;
     int msgid;
-    pool workers;
-    pool rooms;
+    struct pool workers;
+    struct pool rooms;
+    struct unit *units;
 };
 
 
@@ -46,6 +60,7 @@ struct server_conf init_server(char *db_path, int wnum, int rnum);
  * @return status
  */
 int loop_recv(int socket, int msgid);
+
 
 /**
  * Error handling function.
