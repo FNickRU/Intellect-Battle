@@ -2,7 +2,7 @@
 #Compile: make
 #Run tests: make test
 
-DEPENDENCIES_LIST:="ncurses gcc libcunit[1]-dev"
+DEPENDENCIES_LIST:="ncurses gcc"
 
 INC_DIR = include
 SRC_DIR = src
@@ -39,7 +39,7 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
-test:
+test: all
 	make -C $(TST_DIR)
 
 deps:
