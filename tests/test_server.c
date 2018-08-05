@@ -2,8 +2,8 @@
  * Tests for server.c.
  */
 #include "CUnit/Basic.h"
-#include "./../src/headers/server.h"
 #include <signal.h>
+#include "server.h"
 
 
 /**

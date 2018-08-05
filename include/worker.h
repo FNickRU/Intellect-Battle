@@ -4,7 +4,7 @@
 #ifndef __WORKER_H
 #define __WORKER_H
 
-#include "headers/msg_struct.h"
+#include "msg_struct.h"
 
 
 /**

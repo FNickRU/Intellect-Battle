@@ -2,8 +2,8 @@
  * Tests for test.c.
  */
 #include "CUnit/Basic.h"
-#include "./../src/room.h"
 #include <string.h>
+#include "room.h"
 
 /**
  * Test suit initialization function.

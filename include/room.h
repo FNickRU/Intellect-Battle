@@ -5,8 +5,8 @@
 #define __ROOM_H
 
 
-#include "headers/msg_struct.h"
-#include "headers/unit.h"
+#include "msg_struct.h"
+#include "unit.h"
 
 
 /**
