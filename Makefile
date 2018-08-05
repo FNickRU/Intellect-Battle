@@ -2,6 +2,9 @@
 #Compile: make
 #Run tests: make test
 
+DEPENDENCIES_LIST:="ncurses gcc"
+
+INC_DIR = include
 SRC_DIR = src
 OBJ_DIR = obj
 TST_DIR = tests
@@ -9,9 +12,8 @@ BIN_DIR = bin
 DIRS = $(SRC_DIR) $(OBJ_DIR) $(TST_DIR) $(BIN_DIR)
 
 SRC = $(wildcard $(SRC_DIR)/*.c)
-INC = $(wildcard $(SRC_DIR)/*.h)
 OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-BIN = a.out
+BIN = result.out
 
 CC = gcc
 CFLAGS = -std=gnu99
@@ -21,7 +23,7 @@ LFLAGS =
 
 .PHONY: all clean build test
 
-all: $(DIRS) $(BIN_DIR)/$(BIN)
+all: deps $(DIRS) $(BIN_DIR)/$(BIN)
 
 build: clean all
 
@@ -32,10 +34,15 @@ $(BIN_DIR)/$(BIN): $(OBJ)
 	$(LINK) $(OBJ) $(LFLAGS) -o $@
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -I./$(INC_DIR) -c $< -o $@
 
 clean:
-	rm -rf $(OBJ) $(BIN_DIR)/$(BIN)
+	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
-test:
+test: all
 	make -C $(TST_DIR)
+
+deps:
+	@echo "Checking dependencies"
+	@/bin/bash ./check.sh $(DEPENDENCIES_LIST)
+	@echo "All dependecies is fit!"
