@@ -12,7 +12,8 @@ deploy:
     api_key:
         secure: $GITHUB_TOKEN
     file:
-        - ./bin/out
+        - ./bin/client.out
+        - ./bin/server.out
     skip_cleanup: true
     on:
         tags: true

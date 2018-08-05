@@ -6,6 +6,7 @@
 
 
 #include <pthread.h>
+#include "unit.h"
 
 
 /**
@@ -15,19 +16,6 @@
 struct pool {
     pthread_t* tid;
     int size;
-};
-
-
-/**
-* This structure describes the question unit
-* with the answer options and the right answer.
-*/
-struct unit {
-    char *quest;
-    int qsize;
-    char *answers[4];
-    int asize[4];
-    int right_ans;
 };
 
 

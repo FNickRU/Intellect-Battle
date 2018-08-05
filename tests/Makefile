@@ -9,10 +9,7 @@ OBJ_DIR = ../obj
 
 INC = ../include
 OBJ = ../obj/test
-MODULE_OBJ = ../obj
-TEST_TEST = test_test.out
-TEST_OBJ = ../obj/test.o
-TESTS = $(TEST_TEST)
+TESTS =
 
 CC = gcc
 CFLAGS = -std=gnu99 -I$(INC)
@@ -26,9 +23,6 @@ all: deps $(TESTS) run
 
 build: clean all
 
-$(TEST_TEST): $(TEST_TEST:.out=.o)
-	$(LINK) $(OBJ)/$(TEST_TEST:.out=.o) $(TEST_OBJ) $(LFLAGS) -o $(TEST_TEST)
-
 %.o: %.c
 	mkdir -p $(OBJ)
 	$(CC) $(CFLAGS) -c $< -o $(OBJ)/$@
@@ -36,8 +30,7 @@ $(TEST_TEST): $(TEST_TEST:.out=.o)
 clean:
 	rm -rf *.o $(TESTS)
 
-run:
-	./$(TEST_TEST)
+#run:
 
 deps:
 	/bin/bash ../check.sh $(DEPENDECIES_LIST)
