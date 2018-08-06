@@ -47,6 +47,13 @@
 *.idb
 *.pdb
 
+#CLion files
+.idea/
+
+#CMake files
+CMake*
+cmake*
+
 # Kernel Module Compile Results
 *.mod*
 *.cmd
