@@ -2,7 +2,7 @@ LINUX_VER=$(cat /etc/*-release | grep ID_LIKE)
 echo $LINUX_VER
 
 DEPENDECIES="$@"
-if ["$LINUX_VER" == "ID_LIKE=\"suse opensuse\"" ] ; then
+if [ "$LINUX_VER" == "ID_LIKE=\"suse opensuse\"" ] ; then
     for i in $DEPENDECIES; do
         A=$(apt list --installed | grep " $i ")
         if [ "$A" == "" ]; then
@@ -12,6 +12,7 @@ if ["$LINUX_VER" == "ID_LIKE=\"suse opensuse\"" ] ; then
             echo -en "$i [\033[32m OK\033[0m ]\n"
         fi
     done
+else
     if [ "$LINUX_VER" == "ID_LIKE=debian" ] ; then
         for i in $DEPENDECIES; do
             A=$(apt list --installed | grep "$i")
