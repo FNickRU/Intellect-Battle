@@ -12,22 +12,10 @@ if ["$LINUX_VER" == "ID_LIKE=\"suse opensuse\"" ] ; then
             echo -en "$i [\033[32m OK\033[0m ]\n"
         fi
     done
-fi
-if [ "$LINUX_VER" == "ID_LIKE=debian" ] ; then
-    for i in $DEPENDECIES; do
-        A=$(apt list --installed | grep "$i")
-        if [ "$A" == "" ]; then
-            echo -en "$i [\033[31mFAIL\033[0m]\n"
-            exit 42
-        else
-            echo -en "$i [\033[32m OK\033[0m ]\n"
-        fi
-    done
-else
-    if [ "$LINUX_VER" == "ID_LIKE=archlinux" ]; then
+    if [ "$LINUX_VER" == "ID_LIKE=debian" ] ; then
         for i in $DEPENDECIES; do
-            A=$(pacman -Qi $i)
-            if [ "$A" == "error: package '$i' was not found" ]; then
+            A=$(apt list --installed | grep "$i")
+            if [ "$A" == "" ]; then
                 echo -en "$i [\033[31mFAIL\033[0m]\n"
                 exit 42
             else
@@ -35,14 +23,26 @@ else
             fi
         done
     else
-        for i in $DEPENDECIES; do
-            A=$(yum list installed $i | grep "not found")
-            if [ "$A" == "" ]; then
-                echo -en "$i [\033[32m OK\033[0m ]\n"
-            else
-                echo -en "$i [\033[31mFAIL\033[0m]\n"
-                exit 42
-            fi
-        done
+        if [ "$LINUX_VER" == "ID_LIKE=archlinux" ]; then
+            for i in $DEPENDECIES; do
+                A=$(pacman -Qi $i)
+                if [ "$A" == "error: package '$i' was not found" ]; then
+                    echo -en "$i [\033[31mFAIL\033[0m]\n"
+                    exit 42
+                else
+                    echo -en "$i [\033[32m OK\033[0m ]\n"
+                fi
+            done
+        else
+            for i in $DEPENDECIES; do
+                A=$(yum list installed $i | grep "not found")
+                if [ "$A" == "" ]; then
+                    echo -en "$i [\033[32m OK\033[0m ]\n"
+                else
+                    echo -en "$i [\033[31mFAIL\033[0m]\n"
+                    exit 42
+                fi
+            done
+        fi
     fi
 fi
