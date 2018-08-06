@@ -38,7 +38,7 @@ struct server_conf {
  * @param wnum - room pool size
  * @return struct server_conf
  */
-struct server_conf init_server(char *db_path, int wnum, int rnum);
+struct server_conf *init_server(char *db_path, int wnum, int rnum);
 
 
 /**

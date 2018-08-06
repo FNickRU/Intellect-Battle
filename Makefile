@@ -11,33 +11,27 @@ TST_DIR = tests
 BIN_DIR = bin
 DIRS = $(SRC_DIR) $(OBJ_DIR) $(TST_DIR) $(BIN_DIR)
 
-SERV_SRC = $(SRC_DIR)/server.c $(SRC_DIR)/room.c $(SRC_DIR)/worker.c
-CLNT_SRC = $(SRC_DIR)/client.c
-SERV_OBJ = $(SERV_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-CLNT_OBJ = $(CLNT_SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-SERV = server.out
-CLNT = client.out
+SRC = $(wildcard $(SRC_DIR)/*.c)
+OBJ = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+BIN = result.out
 
 CC = gcc
 CFLAGS = -std=gnu99
 
 LINK = gcc
-LFLAGS =
+LFLAGS = -lpthread
 
 .PHONY: all clean build test
 
-all: deps $(DIRS) $(BIN_DIR)/$(CLNT) $(BIN_DIR)/$(SERV)
+all: deps $(DIRS) $(BIN_DIR)/$(BIN)
 
 build: clean all
 
 $(DIRS):
 	mkdir -p $(DIRS)
 
-$(BIN_DIR)/$(SERV): $(SERV_OBJ)
-	$(LINK) $(SERV_OBJ) $(LFLAGS) -o $@
-
-$(BIN_DIR)/$(CLNT): $(CLNT_OBJ)
-	$(LINK) $(CLNT_OBJ) $(LFLAGS) -o $@
+$(BIN_DIR)/$(BIN): $(OBJ)
+	$(LINK) $(OBJ) $(LFLAGS) -o $@
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -I./$(INC_DIR) -c $< -o $@
