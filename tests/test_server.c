@@ -123,31 +123,31 @@ int clean_suite()
 
 void test_init_server()
 {
-    struct server_conf conf;
+    struct server_conf *conf;
     int wnum = 3,
         rnum = 5;
     char db_path[] = "./db";
 
     conf = init_server(db_path, wnum, rnum);
 
-    CU_ASSERT(-1 != conf.socket);
-    CU_ASSERT(-1 != conf.msgid);
-    CU_ASSERT(wnum == cong.workers.size);
-    CU_ASSERT(rnum == conf.rooms.rnum);
+    CU_ASSERT(-1 != conf->socket);
+    CU_ASSERT(-1 != conf->msgid);
+    CU_ASSERT(wnum == cong->workers.size);
+    CU_ASSERT(rnum == conf->rooms.rnum);
 }
 
 
 void test_loop_recv()
 {
-    struct server_conf conf;
+    struct server_conf *conf;
     int wnum = 3,
         rnum = 5;
     char db_path[] = "./db";
 
     conf = init_server(db_path, wnum, rnum);
 
-    CU_ASSERT(-1 == loop_recv(conf.socket, -1));
-    CU_ASSERT(-1 == loop_recv(-1, conf.msgid));
+    CU_ASSERT(-1 == loop_recv(conf->socket, -1));
+    CU_ASSERT(-1 == loop_recv(-1, conf->msgid));
 }
 
 
@@ -168,12 +168,12 @@ void test_signal_handler()
 
 void test_finalize()
 {
-    struct server_conf conf;
+    struct server_conf *conf;
     int wnum = 3,
         rnum = 5;
     char db_path[] = "./db";
 
     conf = init_server(db_path, wnum, rnum);
 
-    CU_ASSERT(0 == finalize(&conf));
+    CU_ASSERT(0 == finalize(conf));
 }

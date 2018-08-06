@@ -26,6 +26,7 @@
  * 3 - Can't initialize a units
  * 4 - Can't get a socket
  * 5 - Can't bind a socket
+ * 6 - Can't recieve msg from LOOP
  */
 
 /*
@@ -53,6 +54,13 @@ void *ROOM_FUNCTION(void *arg)
 {
     return 0;
 }
+
+//TODO: Transer its to another place.
+struct mbuf {
+    long type;
+    struct sockaddr_in addr;
+    char buff[250];
+};
 
 int main(int argc, char *argv[])
 {    
@@ -157,9 +165,32 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
 
 int loop_recv(int socket, int msgid)
 {
-    //
+    struct mbuf msg;
+    int msg_size = sizeof(struct mbuf) - sizeof(long);
     
-    //
+    //TODO:
+    msg.type = 0; 
+    socklen_t socket_length = sizeof(struct sockaddr_in);
+    struct sockaddr_in client_addr;
+    while (1) {
+        //TODO:
+        char request[250];
+        /**
+         * Receive the message
+         */
+        if (recvfrom(socket, request, sizeof(request), 0, &client_addr, &socket_length) < 0) {
+            //perror("Can't recieve from LOOP"); transferred to error_handler
+            error_handler(6);
+        }
+
+        /**
+         * Put the msg into the queue
+         */
+        msg.addr = client_addr;
+        strncpy(msg.buff, request, sizeof(request));
+        
+        msgsnd(msgid, &msg, msg_size, 0);
+    }
     return 0;
 }
 
@@ -177,6 +208,7 @@ int signal_handler(int signal)
 
 int finalize(struct server_conf *conf)
 {
-    //???
+    //dopisat'
+    close(conf->socket);
     return 0;
 }
