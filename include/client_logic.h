@@ -71,7 +71,7 @@ int send_conf(char type, char size);
  *              using. Function only change it.
  * @return      0 - game is started, 1 - wait more, -1 - error
  */
-int wait_for_players(room_info *room);
+int wait_for_players(struct room_info *room);
 
 
 /**
@@ -80,9 +80,9 @@ int wait_for_players(room_info *room);
  *              using. Function only change it.
  * @param  room Room's information. Structure should be created before
  *              using. Function only change it.
- * @return      0, if game is over, else non-zero.
+ * @return      0, if game is over, -1 on error, else > 0.
  */
-int get_unit(unit *u, room_info *room);
+int get_unit(struct unit *u, struct room_info *room);
 
 
 /**
@@ -98,7 +98,7 @@ int send_ans(char ans);
  * @param  room Room's information.
  * @return      0 if client is not loser, else 1 [boolean-like]
  */
-int is_loser(room_info room);
+int is_loser(struct room_info room);
 
 
 /**
