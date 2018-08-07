@@ -15,10 +15,14 @@
 
 /**
  * Package sent by client to server.
- * @param type      Type of room search.
- * @param room_size Size of required room.
- * @param username  Client's username.
+ * @define REQ_JOIN   Search any room.
+ * @define REQ_CREATE Search empty room.
+ * @param  type       Type of room search.
+ * @param  room_size  Size of required room.
+ * @param  username   Client's username.
  */
+#define REQ_JOIN 0
+#define REQ_CREATE 1
 struct pack_join {
     char type;
     char room_size;
