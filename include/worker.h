@@ -5,6 +5,7 @@
 #define __WORKER_H
 
 #include "msg_struct.h"
+#include "packet.h"
 
 
 /**
