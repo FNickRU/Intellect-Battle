@@ -7,11 +7,10 @@
 
 #include <sys/time.h>
 #include "player.h"
-#include "unit.h"
 
 
 #define USER_COUNT 4
-
+#define ANSWER_COUNT 4
 
 /**
  * Package sent by client to server.
@@ -59,22 +58,24 @@ struct pack_wait {
 
 /**
  * Packet sent by room in game-time.
- * @param score     Score of every player. Interpreted as signed decimal
- *                  number, sign show player's participation in the game.
- * @param quest_num Question number (round number). Starts from 1, 0 defines
- *                  game over.
- * @param quest     Question string.
- * @param q_len     Question length.
- * @param ans       Answer's strings.
- * @param ans_len   Answer's length.
+ * @define Q_LEN     Question length.
+ * @define A_LEN     Answer length.
+ * @param  score     Score of every player. Interpreted as signed decimal
+ *                   number, sign show player's participation in the game.
+ * @param  quest_num Question number (round number). Starts from 1, 0 defines
+ *                   game over.
+ * @param  quest     Question string.
+ * @param  q_len     Question length.
+ * @param  ans       Answer's strings.
+ * @param  ans_len   Answer's length.
  */
+#define Q_LEN 200
+#define A_LEN 80
 struct pack_game {
     char score[USER_COUNT];
     unsigned char quest_num;
-    char *quest;
-    unsigned int q_len;
-    char *ans[ANS_COUNT];
-    unsigned int ans_len[ANS_COUNT];
+    char quest[Q_LEN];
+    char ans[ANSWER_COUNT][A_LEN];
 };
 
 
