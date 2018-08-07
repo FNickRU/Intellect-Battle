@@ -9,6 +9,11 @@
 #include "unit.h"
 
 
+#define LAST_QUEST 15
+#define PLR_DISCONNECT -2
+#define PLR_LOST -1
+
+
 /**
  * Information for room.
  * @param msgqid Message queue descriptor.
