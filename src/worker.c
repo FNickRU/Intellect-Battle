@@ -48,13 +48,13 @@ void worker_fsm(void *arg)
                 req.player_info.socket = socket;
                 strncpy(req.player_info.username, join.username, USERNAME_LEN);
                 switch (join.type) {
-                    case MSG_JOIN:
+                    case REQ_JOIN:
                         req.type = MSG_JOIN;
                         req.room_size = 4;
                         msgsnd(msgqid, &req, sizeof(req), 0);
                         state = WAIT;
                         break;
-                    case MSG_CREATE:
+                    case REQ_CREATE:
                         req.type = MSG_CREATE;
                         req.room_size = join.room_size;
                         msgsnd(msgqid, &req, sizeof(req), 0);
