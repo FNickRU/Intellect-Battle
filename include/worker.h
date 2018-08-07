@@ -10,7 +10,7 @@
 
 /**
  * Worker's final state machine. Should run in thread.
- * @param msgqid Message queue descriptor. Should be convert to (int *)
+ * @param arg Message queue descriptor. Should be convert to (int *)
  */
 void worker_fsm(void *arg);
 

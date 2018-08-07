@@ -36,7 +36,7 @@ void worker_fsm(void *arg)
                 }
                 break;
             case RECV:
-                if (recv(socket, &pack, sizeof(join), 0) < 0) {
+                if (recv(socket, &pack, sizeof(pack), 0) < 0) {
                     state = ERROR;
                     err_type = RECV, err_arg = socket;
                 } else {
