@@ -294,7 +294,7 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
             }
         }
         wclear(connectedStatus);
-        wprintw(connectedStatus, "%i / %i", r_info.occupancy, r_info.room_size);
+        wprintw(connectedStatus, "%i / %i", r_info.occupancy + 1, r_info.room_size);
         wrefresh(connectedStatus);
         //-----------------
     }
