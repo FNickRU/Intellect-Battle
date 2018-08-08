@@ -6,6 +6,7 @@
 #include <sys/msg.h>
 #include <arpa/inet.h>
 #include <string.h>
+#include <signal.h>
 
 //#include <pthread.h>
 //#include <sys/types.h>
@@ -14,46 +15,29 @@
 //#include <unistd.h>
 
 #include "server.h"
+#include "worker.h"
+#include "room.h"
 
-#define WNUM 5
-#define RNUM 10
-#define PORT 1111
+#define PORT 11115
 
-/**
- * ERROR CODE
- * 1 - Can't make a msg queue
- * 2 - Out of memory
- * 3 - Can't initialize a units
- * 4 - Can't get a socket
- * 5 - Can't bind a socket
- * 6 - Can't recieve msg from LOOP
- */
+#define ERROR_MSG_QUEUE 1
+#define ERROR_OUT_OF_MEMORY 2
+#define ERROR_INIT_UNITS 3
+#define ERROR_INIT_SOCKET 4
+#define ERROR_BIND_SOCKET 5 
+#define ERROR_RECIEVE_MSG 6
 
-/*
-struct server_conf *init_server(char *db_path,int wnum, int rnum);
-
-int loop_recv(int socket, int msgid);
-
-int error_handler(int errno);
-
-int signal_handler(int signal);
-
-int finalize(struct server_conf *conf);
-*/
-
-//enum STATE {ERROR, INIT, LOOP, FIN};
-
-//TODO: WORKER_FUNCTION <-> WORKER_FUNCTION_NAME from worker.h
-void *WORKER_FUNCTION(void *arg) 
+//Заглушка
+void room_fsm(void *msgid)
 {
     return 0;
 }
-
-//TODO: ROOM_FUNCTION <-> ROOM_FUNCTION_NAME from room.
-void *ROOM_FUNCTION(void *arg)
+void worker_fsm(void *msgid)
 {
     return 0;
 }
+//Заглушка
+
 
 //TODO: Transer its to another place.
 struct mbuf {
@@ -62,17 +46,25 @@ struct mbuf {
     char buff[250];
 };
 
-int main(int argc, char *argv[])
-{    
-    struct server_conf *cfg;
-    cfg = init_server(argv[0],WNUM,RNUM);
-    loop_recv(cfg->socket,cfg->msgid);
-    
-    return 0;
-}
-
 struct server_conf *init_server(char *db_path,int wnum, int rnum)
 {
+    /*
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_handler = signal_handler;
+    sigset_t   set; 
+    sigemptyset(&set);                                                             
+    sigaddset(&set, SIGUSR1); 
+    sigaddset(&set, SIGUSR2);
+    sigaddset(&set, SIGUSR2);
+    sigaddset(&set, SIGUSR2);
+    act.sa_mask = set;
+    sigaction(SIGUSR1, &act, 0);
+    sigaction(SIGUSR2, &act, 0);
+    sigaction(SIGUSR2, &act, 0);
+    sigaction(SIGUSR2, &act, 0);
+    */
+    
     /**
      * Make qeue descriptor
      */
@@ -80,31 +72,23 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     int msgqid = msgget(key, IPC_CREAT | 0664);
     if (msgqid < 0) {
         //perror("Can't create a msg queue"); transferred to error_handler
-        error_handler(1);
+        error_handler(ERROR_MSG_QUEUE);
+        exit(1);
     }
     
     /**
-     * Make worker pool.
+     * Make pools.
      */
     pthread_t *worker_handlers = (pthread_t*)malloc(sizeof(pthread_t)*wnum);
     if (!(worker_handlers)) {
-        error_handler(2);
+        error_handler(ERROR_OUT_OF_MEMORY);
+        exit(2);
     }
-    for (int i = 0; i < wnum; i++) {
-        //TODO: WORKER_FUNCTION <-> WORKER_FUNCTION_NAME
-        pthread_create(&worker_handlers[i], NULL, &WORKER_FUNCTION, &msgqid);
-    }
-    
-    /**
-     * Make room pool.
-     */
     pthread_t *room_handlers = (pthread_t*)malloc(sizeof(pthread_t)*rnum);
     if (!(room_handlers)) {
-        error_handler(2);
-    }
-    for (int i = 0; i < rnum; i++) {
-        //TODO: ROOM_FUNCTION <-> ROOM_FUNCTION_NAME
-        pthread_create(&room_handlers[i], NULL, &ROOM_FUNCTION, &msgqid);
+        error_handler(ERROR_OUT_OF_MEMORY);
+        free(worker_handlers);
+        exit(2);
     }
     
     /**
@@ -112,7 +96,25 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      */
     struct server_conf *cfg = (struct server_conf*)malloc(sizeof(struct server_conf));
     if (!(cfg)) {
-        error_handler(2);
+        error_handler(ERROR_OUT_OF_MEMORY);
+        free(worker_handlers);
+        free(room_handlers);
+        exit(2);
+    }
+    
+    /**
+     * Make worker pool.
+     */
+    for (int i = 0; i < wnum; i++) {
+        pthread_create(&worker_handlers[i], NULL, &room_fsm, &msgqid);
+    }
+    
+    /**
+     * Make room pool.
+     */
+    for (int i = 0; i < rnum; i++) {
+        //TODO: ROOM_FUNCTION <-> ROOM_FUNCTION_NAME
+        pthread_create(&room_handlers[i], NULL, &worker_fsm, &msgqid);
     }
     
     /**
@@ -121,7 +123,11 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     cfg->socket;
     if ((cfg->socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
         //perror("Can't get UDP socket"); transferred to error_handler
-        error_handler(4);
+        error_handler(ERROR_INIT_SOCKET);
+        free(worker_handlers);
+        free(room_handlers);
+        free(cfg);
+        exit(4);
     }
     //TODO: Get right IP adress.
     struct sockaddr_in addr;
@@ -132,7 +138,12 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     
     if (bind(cfg->socket, &addr, sizeof(struct sockaddr_in)) < 0) {
         //perror("Can't bind a socket"); transferred to error_handler
-        error_handler(5);
+        close(cfg->socket);
+        error_handler(ERROR_BIND_SOCKET);
+        free(worker_handlers);
+        free(room_handlers);
+        free(cfg);
+        exit(5);
     }
     
     /**
@@ -156,8 +167,14 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      * Add unit point
      */
     cfg->units = unit_init(db_path);
+    printf("Units done!\n");
     if (!(cfg->units)) {
-        error_handler(3);
+        error_handler(ERROR_INIT_UNITS);
+        free(worker_handlers);
+        free(room_handlers);
+        free(cfg);
+        close(cfg->socket);
+        exit(4);
     }
     
     return cfg;
@@ -180,9 +197,9 @@ int loop_recv(int socket, int msgid)
          */
         if (recvfrom(socket, request, sizeof(request), 0, &client_addr, &socket_length) < 0) {
             //perror("Can't recieve from LOOP"); transferred to error_handler
-            error_handler(6);
+            error_handler(ERROR_RECIEVE_MSG);
+            return -1;
         }
-
         /**
          * Put the msg into the queue
          */
@@ -196,19 +213,66 @@ int loop_recv(int socket, int msgid)
 
 int error_handler(int errno)
 {
-    //?????
+/**
+ * ERROR CODE
+ * 1 - Can't make a msg queue
+ * 2 - Out of memory
+ * 3 - Can't initialize a units
+ * 4 - Can't get a socket
+ * 5 - Can't bind a socket
+ * 6 - Can't recieve msg from LOOP
+ */
+    switch ( errno )  
+    {
+        case 1:
+            printf("ERROR: Can't make a msg queue\n");
+            break;
+        case 2:
+            printf("ERROR: Out of memory\n");
+            break;
+        case 3:
+            printf("ERROR: Can't initialize a unit\n");
+            break;
+        case 4:
+            printf("ERROR: Can't get a socket\n");
+            break;
+        case 5:
+            printf("ERROR: Can't bind a socket\n");
+            break;
+        case 6:
+            printf("ERROR: Can't recieve msg from LOOP\n");
+            break;
+        default:
+            printf("ERROR: The errno is not included in the switch\n");
+            break;
+    }
     return 0;
 }
 
 int signal_handler(int signal)
 {
-    //???
+    printf("SIGNAL = %d\n",signal);
+    //finalize();
+    exit(0);
     return 0;
 }
 
 int finalize(struct server_conf *conf)
 {
-    //dopisat'
     close(conf->socket);
+    
+    for (int i = 0 ; i < conf->workers.size ; i++)
+    {
+        pthread_join(conf->workers.tid[i], NULL);
+    }
+    for (int i = 0 ; i < conf->rooms.size ; i++)
+    {
+        pthread_join(conf->rooms.tid[i], NULL);
+    }
+    
+    unit_free_all(conf->units);
+    
+    free(conf);
+    
     return 0;
 }

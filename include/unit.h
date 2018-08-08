@@ -17,12 +17,24 @@
 #define ANS_COUNT 4
 struct unit {
     char *quest;
-    unsigned int q_len;
+    //unsigned int q_len;
     char *ans[ANS_COUNT];
-    unsigned int ans_len[ANS_COUNT];
+    //unsigned int ans_len[ANS_COUNT];
     unsigned int rans;
     struct unit *next;
     struct unit *prev;
 };
+
+/**
+ * Initializate questions.
+ * @param  path     Program root path
+ */
+struct unit* unit_init (char* path);
+
+/**
+ * Error handler
+ * @param  freepoint Point to any unit
+ */
+int unit_free_all(struct unit *freepoint);
 
 #endif // __UNIT_H
