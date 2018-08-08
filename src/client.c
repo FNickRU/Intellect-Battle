@@ -5,10 +5,11 @@
 #include "string.h"
 #include "unistd.h"
 #include "client_logic.h"
-#include "client_ui.h"
+#include "packet.h"
 
 #define ERR_CONN_FAIL       101
 #define ERR_CONF_SEND_FAIL  102
+#define ERR_WAIT_FAIL       103
 
 #define HANDLE_OK           200
 #define HANDLE_RETRY        201
@@ -47,6 +48,39 @@
 #define QUESTION_HEIGHT 6
 #define SPACER          2
 
+void main_menu_redraw(WINDOW *create_button, WINDOW *join_button, WINDOW *exit_button);
+
+void get_nickname(char *nickname);
+
+char
+get_behaviour(const char *nickname, WINDOW *create_button, WINDOW *join_button, WINDOW *exit_button,
+              char selectedBehaviour);
+
+void redraw_game_window(WINDOW *server_status, WINDOW *question_window, WINDOW *answer[4]);
+
+void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow);
+
+void delete_wins(WINDOW *win1, WINDOW *win2, WINDOW *win3);
+
+char select_size();
+
+//shows buttons of available room sizes
+void highlight_selected(WINDOW* a_window, char a_text[A_LEN], int highlight_type);
+
+//main game loop
+int game_loop(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window, struct room_info r_info);
+
+void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow);
+
+//returns size of room, desired by user
+char mainMenu(const char nickname[52]);
+
+void refresh_values(char *desiredSize);
+
+int error_window(int error_type, bool is_retryable);
+
+void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window);
+
 int main()
 {
     char nickname[52];
@@ -77,6 +111,7 @@ int main()
     }
     refresh();
     //------------------------PLAY_MENU WINDOW INITIALIZATION-----------------------------------
+    curs_set(false);
     int error_handle = HANDLE_OK;
     errCode = connect_to_server();
     while (errCode != 0){
@@ -93,7 +128,6 @@ int main()
                 break;
         }
     }
-    curs_set(false);
     //Main menu
     char type, roomSize;
     char behaviour = BACK_TO_MAIN_MENU;
@@ -113,7 +147,7 @@ int main()
         //------------------------------------
         errCode = send_conf(type, roomSize);
         while (errCode != 0){
-            error_handle = error_window(ERR_CONN_FAIL, true);
+            error_handle = error_window(ERR_CONF_SEND_FAIL, true);
             switch (error_handle){
                 case HANDLE_RETRY:
                     errCode = send_conf(type, roomSize);
@@ -200,8 +234,6 @@ void progress_show()
     WINDOW *wait = newwin(5, 50, 0, 15);
     WINDOW *progress = derwin(wait, 3, 48, 1, 1);
     box(progress, 0, 0);
-    WINDOW *connectedStatus = newwin(1, 50, 6, 38);
-    wprintw(connectedStatus, "2 / 4");
     box(wait, 0, 0);
     int i = 0;
     int iterationN = 0;
@@ -222,7 +254,6 @@ void progress_show()
         }
         wrefresh(progress);
         wrefresh(wait);
-        wrefresh(connectedStatus);
     }
 }
 
@@ -235,11 +266,15 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
     //-----------------
     struct room_info r_info;
     //-----------------
+    WINDOW *connectedStatus = newwin(1, 50, 6, 38);
+    wclear(connectedStatus);
+    wprintw(connectedStatus, "1 / 4");
+    wrefresh(connectedStatus);
     while(errCode == WAIT_MORE) {
         //-----------------
         errCode = wait_for_players(&r_info);
         while (errCode != 0){
-            error_handle = error_window(ERR_CONN_FAIL, true);
+            error_handle = error_window(ERR_WAIT_FAIL, true);
             switch (error_handle){
                 case HANDLE_RETRY:
                     errCode = wait_for_players(&r_info);
@@ -252,6 +287,9 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
                     break;
             }
         }
+        wclear(connectedStatus);
+        wprintw(connectedStatus, "%i / %i", r_info.occupancy, r_info.room_size);
+        wrefresh(connectedStatus);
         //-----------------
     }
     pthread_cancel(drawer);
@@ -450,10 +488,17 @@ void refresh_values(char *desiredSize)
 
 void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow)
 {
-    for (int i = 0; i < 4; i++){
+    for (int i = 0; i < r_info->occupancy; i++){
         bwindow = newwin(NICKNAME_WIN_H, NICKNAME_WIN_W, 20 - NICKNAME_WIN_H * i, 80 - NICKNAME_WIN_W);
         nicks[i] = derwin(bwindow, NICKNAME_WIN_H - 2, NICKNAME_WIN_W - 2, 1, 1);
         wprintw(nicks[i], "%s", (*r_info).usernames[i]);
+        box(bwindow, 0, 0);
+        wrefresh(bwindow);
+    }
+    for(int i = r_info->occupancy; i < 4; i++){
+        bwindow = newwin(NICKNAME_WIN_H, NICKNAME_WIN_W, 20 - NICKNAME_WIN_H * i, 80 - NICKNAME_WIN_W);
+        nicks[i] = derwin(bwindow, NICKNAME_WIN_H - 2, NICKNAME_WIN_W - 2, 1, 1);
+        wprintw(nicks[i], "NO_PLAYER");
         box(bwindow, 0, 0);
         wrefresh(bwindow);
     }
@@ -481,6 +526,9 @@ int error_window(int error_type, bool is_retryable)
         case ERR_CONF_SEND_FAIL:
             mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING SENDING CONFIGURATION TO SERVER");
             break;
+        case ERR_WAIT_FAIL:
+            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING WAITING FOR PLAYERS");
+            break;
     }
     MEVENT event;
     int val;
@@ -490,8 +538,6 @@ int error_window(int error_type, bool is_retryable)
         val = getch();
         if (val == KEY_MOUSE){
             getmouse(&event);
-            wprintw(err_txt, "%i - %i ",event.x, event.y);
-            wrefresh(err_txt);
             if (is_retryable && event.x >= 27 && event.x <= 33){
                 if (event.y >= 15 && event.y <= 17) {
                     clear();
@@ -507,8 +553,4 @@ int error_window(int error_type, bool is_retryable)
 
         }
     }
-    wrefresh(err_win);
-    getch();
-    endwin();
-
 }

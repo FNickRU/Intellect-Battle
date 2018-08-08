@@ -50,25 +50,68 @@ void redraw_game_window(WINDOW *server_status, WINDOW *question_window, WINDOW *
  */
 void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow);
 
+/**
+ * removes 3 windows at once
+ * (works like syntax sugar)
+ * @param win1 window #1
+ * @param win2 window #2
+ * @param win3 window #3
+ */
 void delete_wins(WINDOW *win1, WINDOW *win2, WINDOW *win3);
 
+/**
+ * process selecting size of room
+ * @return selected size of room or 'BACK_TO_MAIN_MENU' define
+ */
 char select_size();
 
-//shows buttons of available room sizes
+/**
+ * highlights selected answer
+ * @param a_window window which should be highlighted
+ * @param a_text text written inside 'a_window'
+ * @param highlight_type type of highlightion
+ * @brief highlight_type could be 1 of 3 definitions (HIGHLIGHT_RED || HIGHLIGHT_BLUE || HIGHLIGHT_GREE)
+ *  other cases is not supported and behaviour is unpredictable
+ */
 void highlight_selected(WINDOW* a_window, char a_text[A_LEN], int highlight_type);
 
-//main game loop
+/**
+ * main loop of playing the game
+ * @param answer array of window where should be inserted answers
+ * @param system_info window where system information is shown
+ * @param question_window window where question is shown
+ * @param r_info information about current room
+ * @return CODE_FAILURE || GAME_OVER
+ */
 int game_loop(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window, struct room_info r_info);
 
-void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow);
-
-//returns size of room, desired by user
+/**
+ * shows main menu where user can select create/join/exit game
+ * @param nickname nickname of user
+ * @return selected size of room || ROOM_JOIN || APPLICATION_EXIT
+ */
 char mainMenu(const char nickname[52]);
 
+/**
+ * updates values for next step of iteration
+ * @param desiredSize value to be dropped
+ */
 void refresh_values(char *desiredSize);
 
+/**
+ * shows error window with choices RETRY + EXIT | EXIT
+ * @param error_type type of error, caused this windown to be shown
+ * @param is_retryable is RETRY button available
+ * @return HANDLE_RETRY || HANDLE_STOP, depending on which choice was selected
+ */
 int error_window(int error_type, bool is_retryable);
 
+/**
+ * cycle of waiting for client
+ * @param answer
+ * @param system_info
+ * @param question_window
+ */
 void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window);
 
 #endif //PROJECT_CLIENT_UI_H
