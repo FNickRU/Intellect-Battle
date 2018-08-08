@@ -56,51 +56,51 @@ struct unit* unit_create ()
  */
 struct unit* unit_init (char* path)
 {
-	int i = 0;
-	int slen = strlen(path);	
+    int i = 0;
+    int slen = strlen(path);	
     int err_next = 0;
-	char* enterpath = path;
-	char fullpath[255];
+    char* enterpath = path;
+    char fullpath[255];
     char input[255];
     FILE *unitFile;
     int num_of_unit = 0;
 
-	int libdsc = 0;
+    int libdsc = 0;
 
-	struct unit *end;
+    struct unit *end;
     struct unit *tmp;
     struct unit *first;
     end = unit_create();
     if (end == NULL) return end;
     first = end;
     
-	/**
+    /**
      * Magic with paths
      */
-	for (i = slen; enterpath[i]!='/' ; i--) {
-	}
-	enterpath[i] = 0;
-	char* unitpath = (char*)malloc(strlen(enterpath)+strlen(unitfolder)+1);
-	unitpath[0] = 0;
-	strcat(unitpath,enterpath);
-	strcat(unitpath,unitfolder);
-	
+    for (i = slen; enterpath[i]!='/' ; i--) {
+    }
+    enterpath[i] = 0;
+    char* unitpath = (char*)malloc(strlen(enterpath)+strlen(unitfolder)+1);
+    unitpath[0] = 0;
+    strcat(unitpath,enterpath);
+    strcat(unitpath,unitfolder);
+    
     /**
      * Open and read each the unit from the directory
      */
-	DIR *d;
-	struct dirent *dir;
-	d = opendir(unitpath);
-	if (d) {
-		while ((dir = readdir(d)) != NULL) {
+    DIR *d;
+    struct dirent *dir;
+    d = opendir(unitpath);
+    if (d) {
+        while ((dir = readdir(d)) != NULL) {
             /**
              * More magic
              */
             if (strrchr(dir->d_name,'.') == NULL) continue;
-			if (strcmp(strrchr(dir->d_name,'.'),".units") == 0) {
-				strcpy(fullpath,unitpath);
-				strcat(fullpath,"/");
-				strcat(fullpath,dir->d_name);
+            if (strcmp(strrchr(dir->d_name,'.'),".units") == 0) {
+                strcpy(fullpath,unitpath);
+                strcat(fullpath,"/");
+                strcat(fullpath,dir->d_name);
                 printf("fullpath = %s\n",fullpath);
                 unitFile = fopen (fullpath, "r");
                 if (unitFile == NULL) continue;
@@ -153,9 +153,9 @@ struct unit* unit_init (char* path)
                     }
                 }
                 //End of parse
-			}
-		}
-		printf("Вопросов было загруженно: %d\n",num_of_unit);
+            }
+        }
+        printf("Вопросов было загруженно: %d\n",num_of_unit);
         
         /**
          * Clean the temp variable
@@ -175,10 +175,10 @@ struct unit* unit_init (char* path)
          */
         end->next = first;
         first->prev = end;
-		closedir(d);
-		free(unitpath);
-	}
+        closedir(d);
+        free(unitpath);
+    }
 
-	return end;
+    return end;
     
 }
