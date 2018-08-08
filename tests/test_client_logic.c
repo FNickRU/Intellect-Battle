@@ -20,7 +20,7 @@ int clean_suite();
 /**
  * Test of connect function. Check socket.
  */
-void test_connect();
+void test_connect_to_server();
 
 /**
  * Test of send_conf function. Check type.
@@ -74,8 +74,8 @@ int main()
     }
 
     if (NULL == CU_add_test(pSuite,
-        "test of connect() [socket]",
-        test_connect)) {
+        "test of connect_to_server() [socket]",
+        test_connect_to_server)) {
         CU_cleanup_registry();
         return CU_get_error();
     }
@@ -153,11 +153,11 @@ int clean_suite()
    return 0;
 }
 
-void test_connect()
+void test_connect_to_server()
 {
     memset(&Client_info, 0, sizeof(Client_info));
     Client_info.socket = -1;
-    CU_ASSERT(0 != connect());
+    CU_ASSERT(0 != connect_to_server());
 }
 
 void test_send_conf_type()
@@ -184,12 +184,14 @@ void test_get_unit_room()
 
 void test_send_ans_ans1()
 {
-    CU_ASSERT(0 != send_ans(-1));
+    struct timeval timestamp;
+    CU_ASSERT(0 != send_ans(-1, timestamp));
 }
 
 void test_send_ans_ans2()
 {
-    CU_ASSERT(0 != send_ans(10));
+    struct timeval timestamp;
+    CU_ASSERT(0 != send_ans(10, timestamp));
 }
 
 void test_is_loser_true()

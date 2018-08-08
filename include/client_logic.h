@@ -8,6 +8,9 @@
 #include "packet.h"
 
 
+#define CODE_SUCCESS 0
+#define CODE_FAILURE (-1)
+
 /**
  * Client-side system information.
  */
@@ -53,7 +56,7 @@ void init(char* name);
  * Connect to server (socket connect wrapper).
  * @return 0 if socket is connected, else non-zero.
  */
-int connect();
+int connect_to_server();
 
 
 /**
@@ -69,19 +72,23 @@ int send_conf(char type, char size);
  * Wait server response and interprets it.
  * @param  room Room's information. Structure should be created before
  *              using. Function only change it.
- * @return      0 - game is started, 1 - wait more, -1 - error
+ * @return      [START_GAME, WAIT_MORE, CODE_FAILURE]
  */
+#define START_GAME 0
+#define WAIT_MORE 1
 int wait_for_players(struct room_info *room);
 
 
 /**
  * Get unit from server (and game info).
- * @param  u    Pointer to unit structure. Structure should be created before
+ * @param  u    Unit's information. Structure should be created before
  *              using. Function only change it.
  * @param  room Room's information. Structure should be created before
  *              using. Function only change it.
- * @return      0, if game is over, -1 on error, else > 0.
+ * @return      [GAME_OVER, GAME_CONT, CODE_FAILURE]
  */
+#define GAME_OVER 0
+#define GAME_CONT 1
 int get_unit(struct unit *u, struct room_info *room);
 
 
@@ -90,7 +97,7 @@ int get_unit(struct unit *u, struct room_info *room);
  * @param  ans Number of answer [0-3].
  * @return     0, if answer sended successfully.
  */
-int send_ans(char ans);
+int send_ans(char ans, struct timeval timestamp);
 
 
 /**

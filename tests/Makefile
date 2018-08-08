@@ -9,7 +9,9 @@ OBJ_DIR = ../obj
 
 INC = ../include
 OBJ = ../obj/test
-TESTS =
+TEST_CL = test_client_logic.out
+TEST_CLC = $(patsubst %.out,%.c,$(TEST_CL))
+TESTS = $(TEST_CL)
 
 CC = gcc
 CFLAGS = -std=gnu99 -I$(INC)
@@ -22,6 +24,10 @@ LFLAGS = -lcunit
 all: deps $(TESTS) run
 
 build: clean all
+
+$(TEST_CL): $(TEST_CLC)
+	$(LINK) $(CFLAGS) $(TEST_CLC) $(OBJ_DIR)/client_logic.o \
+		$(LFLAGS) -o $(TEST_CL)
 
 %.o: %.c
 	mkdir -p $(OBJ)
