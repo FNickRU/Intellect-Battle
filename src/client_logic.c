@@ -123,8 +123,8 @@ int send_ans(char ans, struct timeval timestamp)
 int is_loser(struct room_info room)
 {
     if (room.score[room.id] > 0)
-        return 1;
-    return 0;
+        return 0;
+    return 1;
 }
 
 

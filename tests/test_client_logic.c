@@ -157,41 +157,41 @@ void test_connect_to_server()
 {
     memset(&Client_info, 0, sizeof(Client_info));
     Client_info.socket = -1;
-    CU_ASSERT(0 != connect_to_server());
+    CU_ASSERT(CODE_FAILURE == connect_to_server());
 }
 
 void test_send_conf_type()
 {
-    CU_ASSERT(0 != send_conf(-1, 3));
+    CU_ASSERT(CODE_FAILURE == send_conf(-1, 3));
 }
 
 void test_wait_for_players_room()
 {
-    CU_ASSERT(-1 == wait_for_players(NULL));
+    CU_ASSERT(CODE_FAILURE == wait_for_players(NULL));
 }
 
 void test_get_unit_u()
 {
     struct room_info room;
-    CU_ASSERT(-1 == get_unit(NULL, &room));
+    CU_ASSERT(CODE_FAILURE == get_unit(NULL, &room));
 }
 
 void test_get_unit_room()
 {
     struct unit u;
-    CU_ASSERT(-1 == get_unit(&u, NULL));
+    CU_ASSERT(CODE_FAILURE == get_unit(&u, NULL));
 }
 
 void test_send_ans_ans1()
 {
     struct timeval timestamp;
-    CU_ASSERT(0 != send_ans(-1, timestamp));
+    CU_ASSERT(CODE_FAILURE == send_ans(-1, timestamp));
 }
 
 void test_send_ans_ans2()
 {
     struct timeval timestamp;
-    CU_ASSERT(0 != send_ans(10, timestamp));
+    CU_ASSERT(CODE_FAILURE == send_ans(10, timestamp));
 }
 
 void test_is_loser_true()
@@ -199,7 +199,7 @@ void test_is_loser_true()
     struct room_info room;
     room.occupancy = 2;
     room.room_size = 2;
-    room.id = 1;
+    room.id = 0;
     strncpy(room.usernames[0], "user1", 6);
     strncpy(room.usernames[1], "user2", 6);
     room.score[0] = -1;
@@ -212,7 +212,7 @@ void test_is_loser_false()
     struct room_info room;
     room.occupancy = 2;
     room.room_size = 2;
-    room.id = 1;
+    room.id = 0;
     strncpy(room.usernames[0], "user1", 6);
     strncpy(room.usernames[1], "user2", 6);
     room.score[0] = 2;
