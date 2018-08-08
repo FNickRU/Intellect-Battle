@@ -88,7 +88,6 @@ void room_fsm(void *room_info)
                 spack.type = S_WAIT;
                 spack.p_wait.occupancy = player_id;
                 spack.p_wait.room_size = room_size;
-                spack.p_wait.id = player_id;
                 strcpy(spack.p_wait.usernames[player_id],
                         players[player_id].username);
                 ++player_id;
@@ -98,6 +97,8 @@ void room_fsm(void *room_info)
                 }
 
                 for (int i = 0; i < player_id; ++i) {
+                    spack.p_wait.id = i;
+
                     if (sendto_user(players[i],
                         (void*)&spack, sizeof(spack)) < 0) {
                         state = FIN;
