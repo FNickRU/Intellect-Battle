@@ -1,7 +1,10 @@
-#include "unit.h"
-
 #include <stdio.h>
 
+#include "unit.h"
+
+/**
+ * Consecutive cleaning of the structure
+ */
 int unit_free_all(struct unit *point)
 {
     struct unit *tmp1 = point;
@@ -9,7 +12,6 @@ int unit_free_all(struct unit *point)
     tmp1->next = NULL;
     while (tmp2->next != NULL)
     {
-        //printf("Free the:%s\n",tmp2->quest);
         for (int i = 0; i < 4; i++)
         {
             free(tmp2->ans[i]);
@@ -19,7 +21,6 @@ int unit_free_all(struct unit *point)
         tmp2 = tmp2->next;
         free(tmp1);
     }
-    //printf("Free the:%s\n",tmp2->quest);
     for (int i = 0; i < 4; i++)
     {
         free(tmp2->ans[i]);

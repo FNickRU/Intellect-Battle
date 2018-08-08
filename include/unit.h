@@ -27,12 +27,12 @@ struct unit {
 
 /**
  * Initializate questions.
- * @param  path     Program root path
+ * @param  path     Root path
  */
 struct unit* unit_init (char* path);
 
 /**
- * Error handler
+ * Free the unit structure
  * @param  freepoint Point to any unit
  */
 int unit_free_all(struct unit *freepoint);

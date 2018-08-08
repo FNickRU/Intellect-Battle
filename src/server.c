@@ -15,14 +15,6 @@
 #define PORT 11115
 #define BACKLOG 4
 
-#define ERROR_MSG_QUEUE     1
-#define ERROR_OUT_OF_MEMORY 2
-#define ERROR_INIT_UNITS    3
-#define ERROR_INIT_SOCKET   4
-#define ERROR_BIND_SOCKET   5 
-#define ERROR_RECIEVE_MSG   6
-#define ERROR_ACCEPT        7
-
 //Заглушка
 void room_fsm(void *msgid)
 {
@@ -43,10 +35,12 @@ struct mbuf {
 
 struct server_conf *finalize_conf;
 
-
 struct server_conf *init_server(char *db_path,int wnum, int rnum)
 {
-    
+ 
+    /**
+     * initialize the signal handler
+     */
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_handler = signal_handler;
@@ -69,7 +63,6 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     key_t key = ftok("Makefile", 'w');
     int msgqid = msgget(key, IPC_CREAT | 0664);
     if (msgqid < 0) {
-        //perror("Can't create a msg queue"); transferred to error_handler
         error_handler(ERROR_MSG_QUEUE);
         exit(1);
     }
@@ -115,7 +108,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     }
     
     /**
-     * Add Socket
+     * Add a Socket
      */
     cfg->socket;
     if ((cfg->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
@@ -134,7 +127,6 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     addr.sin_port = htons(PORT);
     
     if (bind(cfg->socket, &addr, sizeof(struct sockaddr_in)) < 0) {
-        //perror("Can't bind a socket"); transferred to error_handler
         close(cfg->socket);
         error_handler(ERROR_BIND_SOCKET);
         free(worker_handlers);
@@ -178,19 +170,25 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     return cfg;
 }
 
+
+/**
+ * Start the receive message loop
+ */
 int loop_recv(int socket, int msgid)
 {
     struct mbuf msg;
     int msg_size = sizeof(struct mbuf) - sizeof(long);
     
+    /**
+     *  Now we are ready to receive messages.
+     */
     listen(socket, BACKLOG);
     
-    //TODO:
+    
     msg.type = 0; 
     socklen_t socket_length = sizeof(struct sockaddr_in);
     struct sockaddr_in client_addr;
     while (1) {
-        //TODO:
         char request[250];
         
         int serverd;
@@ -199,7 +197,7 @@ int loop_recv(int socket, int msgid)
             finalize(finalize_conf);
         }
         /**
-         * get message from client
+         * Get message from client
          */
         if (recv(serverd, request, 250, 0) <= 0) {
             error_handler(ERROR_RECIEVE_MSG);
@@ -207,7 +205,7 @@ int loop_recv(int socket, int msgid)
         }
 
         /**
-         * put the message into the queue
+         * Put the message into the queue
          */
         msg.addr = serverd;
         

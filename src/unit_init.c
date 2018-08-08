@@ -1,22 +1,36 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-//#include <dlfcn.h>
 
 #include <dirent.h>
 #include "unit.h"
 
+/**
+ * The path to the units folder
+ */
 const char* unitfolder = "/units"; 
 
+
+/**
+ * Creates an empty structure object
+ */
 struct unit* unit_create ()
 {
     struct unit *u;
+    
+    /**
+     * Getting a place for question
+     */
     u = (struct unit*)malloc(sizeof(struct unit));
     u->quest = (char *)malloc(sizeof(char) * 200);
     if (!(u->quest)) {
         free(u);
         return NULL;
     }
+    
+    /**
+     * Getting a place for answers
+     */
     for (int i = 0; i < 4; i++) {
         u->ans[i]= (char *)malloc(sizeof(char) * 80);
         if (!(u->ans[i])) {
@@ -27,12 +41,19 @@ struct unit* unit_create ()
             return NULL;
         }
     }
+    
+    /**
+     * Initializing fields with zeros
+     */
     u->rans = 0;
     u->next = NULL;
     u->prev = NULL;
     return u;
 }
 
+/**
+ * Function of downloading questions from the folder
+ */
 struct unit* unit_init (char* path)
 {
 	int i = 0;
@@ -53,7 +74,9 @@ struct unit* unit_init (char* path)
     if (end == NULL) return end;
     first = end;
     
-	
+	/**
+     * Magic with paths
+     */
 	for (i = slen; enterpath[i]!='/' ; i--) {
 	}
 	enterpath[i] = 0;
@@ -62,11 +85,17 @@ struct unit* unit_init (char* path)
 	strcat(unitpath,enterpath);
 	strcat(unitpath,unitfolder);
 	
+    /**
+     * Open and read each the unit from the directory
+     */
 	DIR *d;
 	struct dirent *dir;
 	d = opendir(unitpath);
 	if (d) {
 		while ((dir = readdir(d)) != NULL) {
+            /**
+             * More magic
+             */
             if (strrchr(dir->d_name,'.') == NULL) continue;
 			if (strcmp(strrchr(dir->d_name,'.'),".units") == 0) {
 				strcpy(fullpath,unitpath);
@@ -74,7 +103,13 @@ struct unit* unit_init (char* path)
 				strcat(fullpath,dir->d_name);
                 printf("fullpath = %s\n",fullpath);
                 unitFile = fopen (fullpath, "r");
+                if (unitFile == NULL) continue;
                 
+                /**
+                 * If there are suitable file, parse it.
+                 * Suitable is *.units
+                 * Then looking for another file
+                 */
                 while (!feof(unitFile)) {
                     err_next = 0;
                     if (!(fgets(input,250,unitFile))) {
@@ -101,31 +136,30 @@ struct unit* unit_init (char* path)
                     if (strlen(input) > 10) {
                         err_next = 1;
                     }
-                    //printf("s=%s\nd=%d\n",input,input[0]-48);
                     end->rans = input[0]-48;
                     if ((end->rans > 0) && (end->rans < 5)) {
                         if (!err_next) {
                             num_of_unit++;
                             tmp = end;
                             end = unit_create();
+                            if (!(end)) 
+                            {
+                                unit_free_all(tmp);
+                                return NULL;
+                            }
                             tmp->next = end;
                             end->prev = tmp;
-                            /*
-                            printf("q = %s\n",end->prev->quest);
-                            printf("1 = %s\n",end->prev->ans[0]);
-                            printf("2 = %s\n",end->prev->ans[1]);
-                            printf("3 = %s\n",end->prev->ans[2]);
-                            printf("4 = %s\n",end->prev->ans[3]);
-                            printf("rans = %d\n",end->prev->rans);
-                            */
-                            
                         }
                     }
                 }
+                //End of parse
 			}
 		}
 		printf("Вопросов было загруженно: %d\n",num_of_unit);
         
+        /**
+         * Clean the temp variable
+         */
         tmp = end->prev;
         free(end->quest);
         free(end->ans[0]);
@@ -135,6 +169,10 @@ struct unit* unit_init (char* path)
         free(end);
         end = tmp;
         
+        /**
+         * Loop the list.
+         * Close the directory and return the pointer
+         */
         end->next = first;
         first->prev = end;
 		closedir(d);
@@ -142,9 +180,5 @@ struct unit* unit_init (char* path)
 	}
 
 	return end;
+    
 }
-
-//int main (int argc, char* argv[])
-//{
-//    init_lib(NULL,argv);
-//}
