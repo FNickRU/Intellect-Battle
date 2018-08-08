@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "unistd.h"
+#include "errno.h"
 #include "client_logic.h"
 #include "packet.h"
 
@@ -146,7 +147,7 @@ int main()
         }
         //------------------------------------
         errCode = send_conf(type, roomSize);
-        while (errCode != 0){
+        while (errCode == CODE_FAILURE){
             error_handle = error_window(ERR_CONF_SEND_FAIL, true);
             switch (error_handle){
                 case HANDLE_RETRY:
@@ -249,6 +250,7 @@ void progress_show()
             wmove(progress, iterationN, 0);
             wattron(progress, COLOR_PAIR(10 + iterationN));
             i = 0;
+            sleep(1);
         } else {
             i++;
         }
@@ -404,20 +406,20 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window, s
     mvwprintw(system_info, 0, 63, "Users:");
     wrefresh(system_info);
     print_nickname(&r_info, nicks, bwindow);
-    struct unit *question = NULL;
+    struct unit question;
 
-    status = get_unit(question, &r_info);
+    status = get_unit(&question, &r_info);
     if (status == CODE_FAILURE){
         return CODE_FAILURE;
     }
     struct timeval time;
 
     WINDOW *innertext = derwin(question_window, QUESTION_HEIGHT - 2, QUESTION_WIDTH - 2, 1, 1);
-    wprintw(innertext, question->quest);
+    wprintw(innertext, question.quest);
     wrefresh(innertext);
     for(int i = 0; i < 4; i++){
         innertext = derwin(answer[i], ANSWER_HEIGHT - 2, ANSWER_WIDTH - 2, 1, 1);
-        wprintw(innertext, question->ans[i]);
+        wprintw(innertext, question.ans[i]);
         wrefresh(innertext);
     }
 
@@ -427,23 +429,23 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window, s
             getmouse(&event);
             if (event.x < ANSWER_WIDTH && event.y > QUESTION_HEIGHT + SPACER) {
                 char winId = ((char)event.y - (QUESTION_HEIGHT + SPACER)) / 4;
-                highlight_selected(answer[winId], question->ans[winId], HIGHLIGHT_BLUE);
+                highlight_selected(answer[winId], question.ans[winId], HIGHLIGHT_BLUE);
                 gettimeofday(&time, NULL);
                 status = send_ans(winId, time);
                 if (status != 0){
                     break;
                 }
-                status = get_unit(question, &r_info);
+                status = get_unit(&question, &r_info);
                 if (status != 0){
                     break;
                 }
                 if (is_loser(r_info) == GAME_OVER) {
-                    highlight_selected(answer[winId], question->ans[winId], HIGHLIGHT_RED);
+                    highlight_selected(answer[winId], question.ans[winId], HIGHLIGHT_RED);
                     sleep(1);
                     status = GAME_OVER;
                     break;
                 }
-                highlight_selected(answer[winId], question->ans[winId], HIGHLIGHT_GREEN);
+                highlight_selected(answer[winId], question.ans[winId], HIGHLIGHT_GREEN);
                 sleep(1);
             }
         }
@@ -521,13 +523,13 @@ int error_window(int error_type, bool is_retryable)
     mvwprintw(stop, 1, 1, "EXIT");
     switch (error_type) {
         case ERR_CONN_FAIL:
-            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING CONNECTION");
+            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING CONNECTION (%s)", strerror(errno));
             break;
         case ERR_CONF_SEND_FAIL:
-            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING SENDING CONFIGURATION TO SERVER");
+            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING SENDING CONFIGURATION TO SERVER (%s)", strerror(errno));
             break;
         case ERR_WAIT_FAIL:
-            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING WAITING FOR PLAYERS");
+            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING WAITING FOR PLAYERS (%s)", strerror(errno));
             break;
     }
     MEVENT event;
