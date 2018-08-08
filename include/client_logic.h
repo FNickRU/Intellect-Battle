@@ -8,6 +8,10 @@
 #include "packet.h"
 
 
+/**
+ * @define CODE_SUCCESS Function return successfully.
+ * @define CODE_FAILURE Function fail.
+ */
 #define CODE_SUCCESS 0
 #define CODE_FAILURE (-1)
 
@@ -54,7 +58,7 @@ void init(char* name);
 
 /**
  * Connect to server (socket connect wrapper).
- * @return 0 if socket is connected, else non-zero.
+ * @return CODE_SUCCESS if socket is connected, else CODE_FAILURE.
  */
 int connect_to_server();
 
@@ -63,16 +67,19 @@ int connect_to_server();
  * Send request to server (search).
  * @param  type Type of searching. Values: [REQ_JOIN, REQ_CREATE]
  * @param  size Size of room. Valuable only for REQ_CREATE.
- * @return      0, if request sended successfully, else non-zero.
+ * @return      CODE_SUCCESS, if request sended successfully, else
+ *              CODE_FAILURE.
  */
 int send_conf(char type, char size);
 
 
 /**
- * Wait server response and interprets it.
- * @param  room Room's information. Structure should be created before
- *              using. Function only change it.
- * @return      [START_GAME, WAIT_MORE, CODE_FAILURE]
+ * Wait server's response and interprets it.
+ * @define START_GAME Game is started.
+ * @define WAIT_MORE  Room is waiting new players.
+ * @param  room       Room's information. Structure should be created before
+ *                    using. Function only change it.
+ * @return            [START_GAME, WAIT_MORE, CODE_FAILURE]
  */
 #define START_GAME 0
 #define WAIT_MORE 1
@@ -81,11 +88,13 @@ int wait_for_players(struct room_info *room);
 
 /**
  * Get unit from server (and game info).
- * @param  u    Unit's information. Structure should be created before
- *              using. Function only change it.
- * @param  room Room's information. Structure should be created before
- *              using. Function only change it.
- * @return      [GAME_OVER, GAME_CONT, CODE_FAILURE]
+ * @define GAME_OVER Game is over.
+ * @define GAME_CONT Game is continue.
+ * @param  u         Unit's information. Structure should be created before
+ *                   using. Function only change it.
+ * @param  room      Room's information. Structure should be created before
+ *                   using. Function only change it.
+ * @return           [GAME_OVER, GAME_CONT, CODE_FAILURE]
  */
 #define GAME_OVER 0
 #define GAME_CONT 1
@@ -94,8 +103,11 @@ int get_unit(struct unit *u, struct room_info *room);
 
 /**
  * Send client's answer to server.
- * @param  ans Number of answer [0-3].
- * @return     0, if answer sended successfully.
+ * @param  ans       Number of answer [0-3].
+ * @param  timestamp Client-side time of answer.
+ * @return           CODE_SUCCESS, if answer sended successfully, else
+ *                   CODE_FAILURE.
+ * @note timestamp is dead arg.
  */
 int send_ans(char ans, struct timeval timestamp);
 
