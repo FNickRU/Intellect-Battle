@@ -11,27 +11,10 @@
 #include "server.h"
 #include "worker.h"
 #include "room.h"
+#include "unit.h"
 
-#define PORT 11115
+#define PORT 1111
 #define BACKLOG 4
-
-//Заглушка
-void room_fsm(void *msgid)
-{
-    return 0;
-}
-void worker_fsm(void *msgid)
-{
-    return 0;
-}
-
-
-//TODO: Transer its to another place.
-struct mbuf {
-    long type;
-    int addr;
-    char buff[250];
-};
 
 struct server_conf *finalize_conf;
 
@@ -63,7 +46,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     key_t key = ftok("Makefile", 'w');
     int msgqid = msgget(key, IPC_CREAT | 0664);
     if (msgqid < 0) {
-        error_handler(ERROR_MSG_QUEUE);
+        server_error_handler(ERROR_MSG_QUEUE);
         exit(1);
     }
     
@@ -72,12 +55,12 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      */
     pthread_t *worker_handlers = (pthread_t*)malloc(sizeof(pthread_t)*wnum);
     if (!(worker_handlers)) {
-        error_handler(ERROR_OUT_OF_MEMORY);
+        server_error_handler(ERROR_OUT_OF_MEMORY);
         exit(2);
     }
     pthread_t *room_handlers = (pthread_t*)malloc(sizeof(pthread_t)*rnum);
     if (!(room_handlers)) {
-        error_handler(ERROR_OUT_OF_MEMORY);
+        server_error_handler(ERROR_OUT_OF_MEMORY);
         free(worker_handlers);
         exit(2);
     }
@@ -87,7 +70,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      */
     struct server_conf *cfg = (struct server_conf*)malloc(sizeof(struct server_conf));
     if (!(cfg)) {
-        error_handler(ERROR_OUT_OF_MEMORY);
+        server_error_handler(ERROR_OUT_OF_MEMORY);
         free(worker_handlers);
         free(room_handlers);
         exit(2);
@@ -112,14 +95,13 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      */
     cfg->socket;
     if ((cfg->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
-        error_handler(ERROR_INIT_SOCKET);
+        server_error_handler(ERROR_INIT_SOCKET);
         free(worker_handlers);
         free(room_handlers);
         free(cfg);
         exit(4);
     }
     
-    //TODO: Get right IP adress.
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
@@ -128,7 +110,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     
     if (bind(cfg->socket, &addr, sizeof(struct sockaddr_in)) < 0) {
         close(cfg->socket);
-        error_handler(ERROR_BIND_SOCKET);
+        server_error_handler(ERROR_BIND_SOCKET);
         free(worker_handlers);
         free(room_handlers);
         free(cfg);
@@ -157,7 +139,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      */
     cfg->units = unit_init(db_path);
     if (!(cfg->units)) {
-        error_handler(ERROR_INIT_UNITS);
+        server_error_handler(ERROR_INIT_UNITS);
         free(worker_handlers);
         free(room_handlers);
         free(cfg);
@@ -176,8 +158,8 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
  */
 int loop_recv(int socket, int msgid)
 {
-    struct mbuf msg;
-    int msg_size = sizeof(struct mbuf) - sizeof(long);
+    struct msg c_msg;
+    int msg_size = sizeof(struct msg) - sizeof(long);
     
     /**
      *  Now we are ready to receive messages.
@@ -185,7 +167,7 @@ int loop_recv(int socket, int msgid)
     listen(socket, BACKLOG);
     
     
-    msg.type = 0; 
+    c_msg.type = MSG_WRK; 
     socklen_t socket_length = sizeof(struct sockaddr_in);
     struct sockaddr_in client_addr;
     while (1) {
@@ -193,30 +175,21 @@ int loop_recv(int socket, int msgid)
         
         int serverd;
         if ((serverd = accept(socket, &client_addr, &socket_length)) < 0) {
-            error_handler(ERROR_ACCEPT);
+            server_error_handler(ERROR_ACCEPT);
             finalize(finalize_conf);
         }
-        /**
-         * Get message from client
-         */
-        if (recv(serverd, request, 250, 0) <= 0) {
-            error_handler(ERROR_RECIEVE_MSG);
-            finalize(finalize_conf);
-        }
-
+        
         /**
          * Put the message into the queue
          */
-        msg.addr = serverd;
+        c_msg.socket = serverd;
         
-        strncpy(msg.buff, request, sizeof(request));
-        
-        msgsnd(msgid, &msg, msg_size, 0);
+        msgsnd(msgid, &c_msg, msg_size, 0);
     }
     return 0;
 }
 
-int error_handler(int errno)
+int server_error_handler(int errno)
 {
 /**
  * ERROR CODE
@@ -225,7 +198,7 @@ int error_handler(int errno)
  * 3 - Can't initialize a units
  * 4 - Can't get a socket
  * 5 - Can't bind a socket
- * 6 - Can't recieve msg from LOOP
+ * 6 - Old errorcode
  * 7 - Can't accept the connection
 */
     switch ( errno )  
@@ -244,9 +217,6 @@ int error_handler(int errno)
             break;
         case 5:
             printf("ERROR: Can't bind a socket\n");
-            break;
-        case 6:
-            printf("ERROR: Can't recieve msg from LOOP\n");
             break;
         case 7:
             printf("ERROR: Can't accept the connection\n");
@@ -268,6 +238,7 @@ int signal_handler(int signal)
 
 int finalize(struct server_conf *conf)
 {
+    msgctl(conf->msgid, IPC_RMID, 0);
     close(conf->socket);
     
     for (int i = 0 ; i < conf->workers.size ; i++)
