@@ -22,7 +22,7 @@ CC = gcc
 CFLAGS = -std=gnu99
 
 LINK = gcc
-LFLAGS =
+LFLAGS = -lpthread -lncurses
 
 .PHONY: all clean build test
 
