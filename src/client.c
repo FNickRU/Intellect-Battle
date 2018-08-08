@@ -234,6 +234,10 @@ void progress_show()
 
     WINDOW *wait = newwin(5, 50, 0, 15);
     WINDOW *progress = derwin(wait, 3, 48, 1, 1);
+    wclear(wait);
+    wclear(progress);
+    wrefresh(wait);
+    wrefresh(progress);
     box(progress, 0, 0);
     box(wait, 0, 0);
     int i = 0;
@@ -275,7 +279,7 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
     while(errCode == WAIT_MORE) {
         //-----------------
         errCode = wait_for_players(&r_info);
-        while (errCode != 0){
+        while (errCode == CODE_FAILURE){
             error_handle = error_window(ERR_WAIT_FAIL, true);
             switch (error_handle){
                 case HANDLE_RETRY:
