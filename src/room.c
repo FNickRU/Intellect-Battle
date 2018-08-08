@@ -23,8 +23,7 @@ void room_fsm(void *room_info)
     int room_size,
         player_id,
         num_quest,
-        step,
-        *sockets;
+        step;
     char score[USER_COUNT];
     struct msg_w msg;
     struct player *players = NULL;
@@ -37,6 +36,9 @@ void room_fsm(void *room_info)
             case INIT:
                 player_id = 0;
                 room_size = 0;
+                num_quest = 1;
+                bzero(&spack, sizeof(spack));
+
                 if (msgrcv(msgid, &msg, sizeof(msg), MSG_ROOM, 0) < 0) {
                     state = FIN;
                     printf("Room %x: Message queue failed!\n", getpid());
@@ -104,25 +106,27 @@ void room_fsm(void *room_info)
                         break;
                     }
                 }
-
                 break;
 
             case GAME:
-                step = rand() % 4;
-                for (int i = 0; i < step; ++i) {
-                    units = units->next;
+                if (num_quest != 0) {
+                    step = rand() % MAX_STEP;
+                    for (int i = 0; i < step; ++i) {
+                        units = units->next;
+                    }
+
+                    strcpy(spack.p_game.quest, units->quest);
+                    for (int i = 0; i < ANS_COUNT; ++i) {
+                        strcpy(spack.p_game.ans[i], units->ans[i]);
+                    }
                 }
 
                 spack.type = S_GAME;
                 for (int i = 0; i < room_size; ++i) {
                     spack.p_game.score[i] = score[i];
                 }
-                spack.p_game.quest_num = num_quest + 1;
+                spack.p_game.quest_num = num_quest;
 
-                strcpy(spack.p_game.quest, units->quest);
-                for (int i = 0; i < ANS_COUNT; ++i) {
-                    strcpy(spack.p_game.ans[i], units->ans[i]);
-                }
 
                 /* Sending questions to players */
                 for(player_id = 0; player_id < room_size; ++player_id) {
@@ -153,26 +157,19 @@ void room_fsm(void *room_info)
                     }
                 }
 
-                ++num_quest;
-                if (num_quest == LAST_QUEST) {
-                    spack.p_game.quest_num = 0;
-                    /* Notification of players about the end of the game */
-                    for(player_id = 0; player_id < room_size; ++player_id) {
-                        if (score[player_id] >= PLR_LOST &&
-                            sendto_user(players[player_id],
-                                        (void*)&spack, sizeof(spack)) < 0) {
-                            score[player_id] = PLR_DISCONNECT;
-                            printf("Room %x: Player %s disconnected!\n",
-                                    getpid(), players[player_id].username);
-                        }
-                    }
-
+                if (num_quest > LAST_QUEST) {
+                    num_quest = 0;
+                } else if (num_quest == 0) {
                     state = GAMEOVER;
+                } else {
+                    ++num_quest;
                 }
-
                 break;
 
             case GAMEOVER:
+                for (player_id = 0; player_id < room_size; ++player_id) {
+                    close(players[player_id].socket);
+                }
                 free(players);
                 players = NULL;
                 state = INIT;
@@ -180,9 +177,11 @@ void room_fsm(void *room_info)
 
             case FIN:
                 for (player_id = 0; player_id < room_size; ++player_id) {
-                    close(players[player_id].socket);
+                    if (close(players[player_id].socket) < 0) {
+                        break;
+                    }
                 }
-                if (players == NULL) {
+                if (players != NULL) {
                     free(players);
                 }
                 state = EXIT;
