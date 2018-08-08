@@ -8,24 +8,20 @@
 #include <string.h>
 #include <signal.h>
 
-//#include <pthread.h>
-//#include <sys/types.h>
-//#include <sys/ipc.h>
-//#include <sys/socket.h>
-//#include <unistd.h>
-
 #include "server.h"
 #include "worker.h"
 #include "room.h"
 
 #define PORT 11115
+#define BACKLOG 4
 
-#define ERROR_MSG_QUEUE 1
+#define ERROR_MSG_QUEUE     1
 #define ERROR_OUT_OF_MEMORY 2
-#define ERROR_INIT_UNITS 3
-#define ERROR_INIT_SOCKET 4
-#define ERROR_BIND_SOCKET 5 
-#define ERROR_RECIEVE_MSG 6
+#define ERROR_INIT_UNITS    3
+#define ERROR_INIT_SOCKET   4
+#define ERROR_BIND_SOCKET   5 
+#define ERROR_RECIEVE_MSG   6
+#define ERROR_ACCEPT        7
 
 //Заглушка
 void room_fsm(void *msgid)
@@ -36,19 +32,21 @@ void worker_fsm(void *msgid)
 {
     return 0;
 }
-//Заглушка
 
 
 //TODO: Transer its to another place.
 struct mbuf {
     long type;
-    struct sockaddr_in addr;
+    int addr;
     char buff[250];
 };
 
+struct server_conf *finalize_conf;
+
+
 struct server_conf *init_server(char *db_path,int wnum, int rnum)
 {
-    /*
+    
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_handler = signal_handler;
@@ -56,14 +54,14 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     sigemptyset(&set);                                                             
     sigaddset(&set, SIGUSR1); 
     sigaddset(&set, SIGUSR2);
-    sigaddset(&set, SIGUSR2);
-    sigaddset(&set, SIGUSR2);
+    sigaddset(&set, SIGINT);
+    sigaddset(&set, SIGABRT);
     act.sa_mask = set;
     sigaction(SIGUSR1, &act, 0);
     sigaction(SIGUSR2, &act, 0);
-    sigaction(SIGUSR2, &act, 0);
-    sigaction(SIGUSR2, &act, 0);
-    */
+    sigaction(SIGINT, &act, 0);
+    sigaction(SIGABRT, &act, 0);
+    
     
     /**
      * Make qeue descriptor
@@ -113,7 +111,6 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      * Make room pool.
      */
     for (int i = 0; i < rnum; i++) {
-        //TODO: ROOM_FUNCTION <-> ROOM_FUNCTION_NAME
         pthread_create(&room_handlers[i], NULL, &worker_fsm, &msgqid);
     }
     
@@ -121,14 +118,14 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      * Add Socket
      */
     cfg->socket;
-    if ((cfg->socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0) {
-        //perror("Can't get UDP socket"); transferred to error_handler
+    if ((cfg->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0) {
         error_handler(ERROR_INIT_SOCKET);
         free(worker_handlers);
         free(room_handlers);
         free(cfg);
         exit(4);
     }
+    
     //TODO: Get right IP adress.
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(struct sockaddr_in));
@@ -167,7 +164,6 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      * Add unit point
      */
     cfg->units = unit_init(db_path);
-    printf("Units done!\n");
     if (!(cfg->units)) {
         error_handler(ERROR_INIT_UNITS);
         free(worker_handlers);
@@ -177,6 +173,8 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
         exit(4);
     }
     
+    finalize_conf = cfg;
+    
     return cfg;
 }
 
@@ -185,6 +183,8 @@ int loop_recv(int socket, int msgid)
     struct mbuf msg;
     int msg_size = sizeof(struct mbuf) - sizeof(long);
     
+    listen(socket, BACKLOG);
+    
     //TODO:
     msg.type = 0; 
     socklen_t socket_length = sizeof(struct sockaddr_in);
@@ -192,18 +192,25 @@ int loop_recv(int socket, int msgid)
     while (1) {
         //TODO:
         char request[250];
-        /**
-         * Receive the message
-         */
-        if (recvfrom(socket, request, sizeof(request), 0, &client_addr, &socket_length) < 0) {
-            //perror("Can't recieve from LOOP"); transferred to error_handler
-            error_handler(ERROR_RECIEVE_MSG);
-            return -1;
+        
+        int serverd;
+        if ((serverd = accept(socket, &client_addr, &socket_length)) < 0) {
+            error_handler(ERROR_ACCEPT);
+            finalize(finalize_conf);
         }
         /**
-         * Put the msg into the queue
+         * get message from client
          */
-        msg.addr = client_addr;
+        if (recv(serverd, request, 250, 0) <= 0) {
+            error_handler(ERROR_RECIEVE_MSG);
+            finalize(finalize_conf);
+        }
+
+        /**
+         * put the message into the queue
+         */
+        msg.addr = serverd;
+        
         strncpy(msg.buff, request, sizeof(request));
         
         msgsnd(msgid, &msg, msg_size, 0);
@@ -221,7 +228,8 @@ int error_handler(int errno)
  * 4 - Can't get a socket
  * 5 - Can't bind a socket
  * 6 - Can't recieve msg from LOOP
- */
+ * 7 - Can't accept the connection
+*/
     switch ( errno )  
     {
         case 1:
@@ -242,6 +250,9 @@ int error_handler(int errno)
         case 6:
             printf("ERROR: Can't recieve msg from LOOP\n");
             break;
+        case 7:
+            printf("ERROR: Can't accept the connection\n");
+            break;
         default:
             printf("ERROR: The errno is not included in the switch\n");
             break;
@@ -252,7 +263,7 @@ int error_handler(int errno)
 int signal_handler(int signal)
 {
     printf("SIGNAL = %d\n",signal);
-    //finalize();
+    finalize(finalize_conf);
     exit(0);
     return 0;
 }
@@ -273,6 +284,6 @@ int finalize(struct server_conf *conf)
     unit_free_all(conf->units);
     
     free(conf);
-    
+    exit(1);
     return 0;
 }
