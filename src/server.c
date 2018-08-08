@@ -16,7 +16,7 @@
 #define PORT 1111
 #define BACKLOG 4
 
-struct server_conf *finalize_conf;
+struct server_conf *server_finalize_conf;
 
 struct server_conf *init_server(char *db_path,int wnum, int rnum)
 {
@@ -147,7 +147,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
         exit(4);
     }
     
-    finalize_conf = cfg;
+    server_finalize_conf = cfg;
     
     return cfg;
 }
@@ -176,7 +176,7 @@ int loop_recv(int socket, int msgid)
         int serverd;
         if ((serverd = accept(socket, &client_addr, &socket_length)) < 0) {
             server_error_handler(ERROR_ACCEPT);
-            finalize(finalize_conf);
+            server_finalize(server_finalize_conf);
         }
         
         /**
@@ -231,12 +231,12 @@ int server_error_handler(int errno)
 int signal_handler(int signal)
 {
     printf("SIGNAL = %d\n",signal);
-    finalize(finalize_conf);
+    server_finalize(server_finalize_conf);
     exit(0);
     return 0;
 }
 
-int finalize(struct server_conf *conf)
+int server_finalize(struct server_conf *conf)
 {
     msgctl(conf->msgid, IPC_RMID, 0);
     close(conf->socket);

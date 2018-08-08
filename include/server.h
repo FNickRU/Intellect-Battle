@@ -78,7 +78,7 @@ int signal_handler(int signal);
  * @param conf - server configuration received after initialization
  * @return status
  */
-int finalize(struct server_conf *conf);
+int server_finalize(struct server_conf *conf);
 
 
 #endif //__SERVER_H

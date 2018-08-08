@@ -8,6 +8,6 @@ int main(int argc, char *argv[])
     struct server_conf *cfg;
     cfg = init_server(argv[0],WNUM,RNUM);
     loop_recv(cfg->socket,cfg->msgid);
-    finalize(cfg);
+    server_finalize(cfg);
     return 0;
 }
