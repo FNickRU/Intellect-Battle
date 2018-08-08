@@ -42,6 +42,9 @@ clean:
 	rm -rf *.o $(TESTS)
 
 
+run: test_cl
+
+
 test_cl: $(BIN_DIR)/$(TEST_CL)
 	./$(BIN_DIR)/$(TEST_CL)
 
