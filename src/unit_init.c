@@ -8,7 +8,7 @@
 /**
  * The path to the units folder
  */
-const char* unitfolder = "/units"; 
+const char* unitfolder = "../units"; 
 
 
 /**
@@ -80,9 +80,10 @@ struct unit* unit_init (char* path)
     for (i = slen; enterpath[i]!='/' ; i--) {
     }
     enterpath[i] = 0;
-    char* unitpath = (char*)malloc(strlen(enterpath)+strlen(unitfolder)+1);
+    char unitpath[255];
     unitpath[0] = 0;
     strcat(unitpath,enterpath);
+    strcat(unitpath,"/");
     strcat(unitpath,unitfolder);
     
     /**
@@ -90,8 +91,10 @@ struct unit* unit_init (char* path)
      */
     DIR *d;
     struct dirent *dir;
+    printf("%s \n",unitpath);
     d = opendir(unitpath);
     if (d) {
+        printf("tyt?\n");
         while ((dir = readdir(d)) != NULL) {
             /**
              * More magic
@@ -153,6 +156,7 @@ struct unit* unit_init (char* path)
                     }
                 }
                 //End of parse
+                fclose(unitFile);
             }
         }
         printf("Вопросов было загруженно: %d\n",num_of_unit);
@@ -176,7 +180,6 @@ struct unit* unit_init (char* path)
         end->next = first;
         first->prev = end;
         closedir(d);
-        free(unitpath);
     }
 
     return end;

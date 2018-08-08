@@ -140,10 +140,19 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     cfg->units = unit_init(db_path);
     if (!(cfg->units)) {
         server_error_handler(ERROR_INIT_UNITS);
+        msgctl(cfg->msgid, IPC_RMID, 0);
+        for (int i = 0 ; i < cfg->workers.size ; i++)
+        {
+            pthread_join(cfg->workers.tid[i], NULL);
+        }
+        for (int i = 0 ; i < cfg->rooms.size ; i++)
+        {
+            pthread_join(cfg->rooms.tid[i], NULL);
+        }
         free(worker_handlers);
         free(room_handlers);
-        free(cfg);
         close(cfg->socket);
+        free(cfg);
         exit(4);
     }
     
@@ -250,6 +259,8 @@ int server_finalize(struct server_conf *conf)
         pthread_join(conf->rooms.tid[i], NULL);
     }
     
+    free(conf->workers.tid);
+    free(conf->rooms.tid);
     unit_free_all(conf->units);
     
     free(conf);
