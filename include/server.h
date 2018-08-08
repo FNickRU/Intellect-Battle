@@ -8,6 +8,13 @@
 #include <pthread.h>
 #include "unit.h"
 
+#define ERROR_MSG_QUEUE     1
+#define ERROR_OUT_OF_MEMORY 2
+#define ERROR_INIT_UNITS    3
+#define ERROR_INIT_SOCKET   4
+#define ERROR_BIND_SOCKET   5 
+#define ERROR_RECIEVE_MSG   6
+#define ERROR_ACCEPT        7
 
 /**
 * This structure describes the configuration
@@ -38,7 +45,7 @@ struct server_conf {
  * @param wnum - room pool size
  * @return struct server_conf
  */
-struct server_conf init_server(char *db_path, int wnum, int rnum);
+struct server_conf *init_server(char *db_path, int wnum, int rnum);
 
 
 /**
@@ -71,7 +78,7 @@ int signal_handler(int signal);
  * @param conf - server configuration received after initialization
  * @return status
  */
-int finalize(struct server_conf *conf);
+int server_finalize(struct server_conf *conf);
 
 
 #endif //__SERVER_H

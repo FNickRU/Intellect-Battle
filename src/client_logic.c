@@ -16,14 +16,12 @@ int sendto_server(struct c_pack send_pack)
     return CODE_SUCCESS;
 }
 
-
 int recvfrom_server(struct s_pack *recv_pack)
 {
     if (recv(Client_info.socket, recv_pack, sizeof(struct s_pack), 0) < 0)
         return CODE_FAILURE;
     return CODE_SUCCESS;
 }
-
 
 void init(char* name)
 {
