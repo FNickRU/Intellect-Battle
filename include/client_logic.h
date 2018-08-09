@@ -22,6 +22,24 @@ struct player Client_info;
 
 
 /**
+ * Wrapper for 'send'.
+ * @param  send_pack Packet to send.
+ * @return           CODE_SUCCESS if packet sended successfully, else
+ *                   CODE_FAILURE.
+ */
+int sendto_server(struct c_pack send_pack);
+
+
+/**
+ * Wrapper for 'recv'
+ * @param  recv_pack Pointer to packet, where will be recorded received data.
+ * @return           CODE_SUCCESS if packet received successfully, else 
+ *                   CODE_FAILURE.
+ */
+int recvfrom_server(struct s_pack *recv_pack);
+
+
+/**
  * Client-side information about room.
  * @param occupancy Number of joined players.
  * @param room_size Max size of room.

@@ -29,7 +29,7 @@ struct room_info {
  * Room's final state machine. Should run in thread.
  * @param room_info Info to room. Should be convert to (struct room_info *).
  */
-void room_fsm(void *room_info);
+void *room_fsm(void *room_info);
 
 
 /**

@@ -9,6 +9,20 @@
 #define SERVER_PORT 1111
 
 
+int sendto_server(struct c_pack send_pack)
+{
+    if (send(Client_info.socket, &send_pack, sizeof(struct c_pack), 0) < 0)
+        return CODE_FAILURE;
+    return CODE_SUCCESS;
+}
+
+int recvfrom_server(struct s_pack *recv_pack)
+{
+    if (recv(Client_info.socket, recv_pack, sizeof(struct s_pack), 0) < 0)
+        return CODE_FAILURE;
+    return CODE_SUCCESS;
+}
+
 void init(char* name)
 {
     Client_info.socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -49,7 +63,7 @@ int send_conf(char type, char size)
         break;
     }
     strncpy(conf.p_join.username, Client_info.username, USERNAME_LEN);
-    return send(Client_info.socket, &conf, sizeof(conf), 0);
+    return sendto_server(conf);
 }
 
 
@@ -59,7 +73,7 @@ int wait_for_players(struct room_info *room)
     if (room == NULL)
         return CODE_FAILURE;
     struct s_pack room_conf;
-    if (recv(Client_info.socket, &room_conf, sizeof(room_conf), 0) < 0)
+    if (recvfrom_server(&room_conf) == CODE_FAILURE)
         return CODE_FAILURE;
     switch (room_conf.type) {
     case S_WAIT:
@@ -93,7 +107,7 @@ int get_unit(struct unit *u, struct room_info *room)
     if (u == NULL || room == NULL)
         return CODE_FAILURE;
     struct s_pack room_conf;
-    if (recv(Client_info.socket, &room_conf, sizeof(room_conf), 0) < 0)
+    if (recvfrom_server(&room_conf) == CODE_FAILURE)
         return CODE_FAILURE;
     if (room_conf.p_game.quest_num == 0)
         return GAME_OVER;
@@ -116,7 +130,7 @@ int send_ans(char ans, struct timeval timestamp)
     answer.type = C_ANS;
     answer.p_ans.ans = ans;
     answer.p_ans.timestamp = timestamp;
-    return send(Client_info.socket, &answer, sizeof(answer), 0);
+    return sendto_server(answer);
 }
 
 

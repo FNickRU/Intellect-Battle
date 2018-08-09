@@ -14,7 +14,7 @@ enum State {WAIT, RECV, PROC, ERROR, FIN};
  */
 void error_handler(int state, int arg);
 
-void worker_fsm(void *arg)
+void *worker_fsm(void *arg)
 {
     int msgqid = *((int *) arg);
 
