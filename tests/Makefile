@@ -58,7 +58,7 @@ clean:
 	rm -rf *.o $(TESTS)
 
 test_r: $(BIN_DIR)/$(TEST_R)
-	./$(BIN_DIR)/$(TEST_R)]
+	./$(BIN_DIR)/$(TEST_R)
 
 test_srv: $(BIN_DIR)/$(TEST_SERV)
 	./$(BIN_DIR)/$(TEST_SERV)
