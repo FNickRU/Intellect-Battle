@@ -16,15 +16,11 @@ TEST_R_SRC = room
 TEST_R_OBJ = $(TEST_R_SRC:=.o)
 TEST_R = $(patsubst %.o,test_%.out,$(TEST_R_OBJ))
 
-TEST_SERV_SRC = server
-TEST_SERV_OBJ = $(TEST_SERV_SRC:=.o)
-TEST_SERV = $(patsubst %.o,test_%.out,$(TEST_SERV_OBJ))
-
 TEST_CL_SRC = client_logic
 TEST_CL_OBJ = $(TEST_CL_SRC:=.o)
 TEST_CL = $(patsubst %.o,test_%.out,$(TEST_CL_OBJ))
 
-TESTS = $(TEST_R) $(TEST_CL) $(TEST_SERV)
+TESTS = $(TEST_R) $(TEST_CL)
 
 CC = gcc
 CFLAGS = -std=gnu99 -I$(INC)
@@ -41,11 +37,6 @@ build: clean all
 $(TEST_R): $(OBJ_DIR)/$(TEST_R_OBJ) $(TEST_R:.out=.o)
 	$(LINK) $(OBJ)/$(TEST_R:.out=.o) $(OBJ_DIR)/$(TEST_R_OBJ) \
 		$(LFLAGS) -o $(BIN_DIR)/$(TEST_R)
-
-$(TEST_SERV): $(OBJ_DIR)/$(TEST_SERV_OBJ) $(TEST_SERV:.out=.o)
-	$(LINK) $(OBJ)/$(TEST_SERV:.out=.o) $(OBJ_DIR)/$(TEST_SERV_OBJ) \
-		$(LFLAGS) -o $(BIN_DIR)/$(TEST_SERV)
-
 $(TEST_CL): $(OBJ_DIR)/$(TEST_CL_OBJ) $(TEST_CL:.out=.o)
 	$(LINK) $(OBJ)/$(TEST_CL:.out=.o) $(OBJ_DIR)/$(TEST_CL_OBJ) \
 		$(LFLAGS) -o $(BIN_DIR)/$(TEST_CL)
@@ -59,9 +50,6 @@ clean:
 
 test_r: $(BIN_DIR)/$(TEST_R)
 	./$(BIN_DIR)/$(TEST_R)
-
-test_srv: $(BIN_DIR)/$(TEST_SERV)
-	./$(BIN_DIR)/$(TEST_SERV)
 
 test_cl: $(BIN_DIR)/$(TEST_CL)
 	./$(BIN_DIR)/$(TEST_CL)
