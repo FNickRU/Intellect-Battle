@@ -10,9 +10,9 @@
 
 
 #define LAST_QUEST 15
-#define PLR_DISCONNECT -2
-#define PLR_LOST -1
-#define MAX_STEP 4 + 1
+#define PLR_DISCONNECT (-2)
+#define PLR_LOST (-1)
+#define MAX_STEP (4 + 1)
 
 
 /**

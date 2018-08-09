@@ -78,19 +78,44 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     }
 
     /**
+     * Add unit point
+     */
+    cfg->units = unit_init(db_path);
+    if (!(cfg->units)) {
+        server_error_handler(ERROR_INIT_UNITS);
+        msgctl(cfg->msgid, IPC_RMID, 0);
+        for (int i = 0 ; i < cfg->workers.size ; i++)
+        {
+            pthread_join(cfg->workers.tid[i], NULL);
+        }
+        for (int i = 0 ; i < cfg->rooms.size ; i++)
+        {
+            pthread_join(cfg->rooms.tid[i], NULL);
+        }
+        free(worker_handlers);
+        free(room_handlers);
+
+        free(cfg);
+        exit(4);
+    }
+
+    struct room_info room;
+    room.msgqid = msgqid;
+    room.units = cfg->units;
+    /**
      * Make worker pool.
      */
     for (int i = 0; i < wnum; i++) {
-        pthread_create(&worker_handlers[i], NULL, &room_fsm, &msgqid);
+        pthread_create(&worker_handlers[i], NULL, &worker_fsm, &msgqid);
     }
 
     /**
      * Make room pool.
      */
     for (int i = 0; i < rnum; i++) {
-        pthread_create(&room_handlers[i], NULL, &worker_fsm, &msgqid);
+        pthread_create(&room_handlers[i], NULL, &room_fsm, &room);
     }
-
+    
     /**
      * Add a Socket
      */
@@ -133,28 +158,6 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
      */
     cfg->workers.tid = worker_handlers;
     cfg->workers.size = wnum;
-
-    /**
-     * Add unit point
-     */
-    cfg->units = unit_init(db_path);
-    if (!(cfg->units)) {
-        server_error_handler(ERROR_INIT_UNITS);
-        msgctl(cfg->msgid, IPC_RMID, 0);
-        for (int i = 0 ; i < cfg->workers.size ; i++)
-        {
-            pthread_join(cfg->workers.tid[i], NULL);
-        }
-        for (int i = 0 ; i < cfg->rooms.size ; i++)
-        {
-            pthread_join(cfg->rooms.tid[i], NULL);
-        }
-        free(worker_handlers);
-        free(room_handlers);
-        close(cfg->socket);
-        free(cfg);
-        exit(4);
-    }
 
     server_finalize_conf = cfg;
 

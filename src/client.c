@@ -17,7 +17,7 @@
 #define HANDLE_STOP         202
 
 #define MAX_ROOM_SIZE       4
-#define APPLICATION_EXIT    -1
+#define APPLICATION_EXIT    (-1)
 
 #define HIGHLIGHT_RED       2
 #define HIGHLIGHT_GREEN     1
@@ -27,7 +27,7 @@
 #define SELECT_BOX_W        11
 #define BACK_BOX_W          20
 #define BACK_BOX_H          5
-#define BACK_TO_MAIN_MENU   -2
+#define BACK_TO_MAIN_MENU   (-2)
 #define ROOM_FOR_FOUR       4
 #define ROOM_FOR_THREE      3
 #define ROOM_FOR_TWO        2
@@ -61,24 +61,28 @@ int main()
     init(nickname);
 
     mousemask(KEY_MOUSE, NULL);
-    //------------------------MAIN_MENU_WINDOW INITIALIZATION-----------------------------------
+    //------------------------MAIN_MENU_WINDOW INITIALIZATION------------------
     WINDOW *create_button = newwin(MENU_CREATE_H, MENU_CREATE_W, SPACER,
                                    (80 - MENU_CREATE_W) / 2);
-    WINDOW *join_button = newwin(MENU_JOIN_H, MENU_JOIN_W, MENU_CREATE_H + SPACER * 2,
+    WINDOW *join_button = newwin(MENU_JOIN_H, MENU_JOIN_W,
+                                 MENU_CREATE_H + SPACER * 2,
                                  (80 - MENU_JOIN_W) / 2);
-    WINDOW *exit_button = newwin(MENU_EXIT_H, MENU_EXIT_W, MENU_CREATE_H + MENU_JOIN_H + SPACER * 3,
+    WINDOW *exit_button = newwin(MENU_EXIT_H, MENU_EXIT_W,
+                                 MENU_CREATE_H + MENU_JOIN_H + SPACER * 3,
                                  (80 - MENU_EXIT_W)/ 2);
-    //------------------------MAIN_MENU_WINDOW INITIALIZATION-----------------------------------
+    //------------------------MAIN_MENU_WINDOW INITIALIZATION------------------
 
-    //------------------------PLAY_MENU WINDOW INITIALIZATION-----------------------------------
+    //------------------------PLAY_MENU WINDOW INITIALIZATION------------------
     WINDOW *server_status = newwin(1, 80, QUESTION_HEIGHT, 0);
-    WINDOW *question_window = newwin(QUESTION_HEIGHT, QUESTION_WIDTH, 0, (80 - QUESTION_WIDTH) / 2);
+    WINDOW *question_window = newwin(QUESTION_HEIGHT, QUESTION_WIDTH, 0,
+                                     (80 - QUESTION_WIDTH) / 2);
     WINDOW *answer[4];
     for (int i = 0; i < 4; i++) {
-        answer[i] = newwin(ANSWER_HEIGHT, ANSWER_WIDTH, QUESTION_HEIGHT + SPACER + ANSWER_HEIGHT * i, 0);
+        answer[i] = newwin(ANSWER_HEIGHT, ANSWER_WIDTH,
+                           QUESTION_HEIGHT + SPACER + ANSWER_HEIGHT * i, 0);
     }
     refresh();
-    //------------------------PLAY_MENU WINDOW INITIALIZATION-----------------------------------
+    //------------------------PLAY_MENU WINDOW INITIALIZATION------------------
     curs_set(false);
     int error_handle = HANDLE_OK;
     errCode = connect_to_server();
@@ -100,7 +104,8 @@ int main()
     char type, roomSize;
     char behaviour = BACK_TO_MAIN_MENU;
     while(behaviour != APPLICATION_EXIT) {
-        behaviour = get_behaviour(nickname, create_button, join_button, exit_button, behaviour);
+        behaviour = get_behaviour(nickname, create_button, join_button,
+                                  exit_button, behaviour);
         if (behaviour == APPLICATION_EXIT){
             break;
         } else {
@@ -136,7 +141,8 @@ int main()
     endwin();
 }
 
-void redraw_game_window(WINDOW *server_status, WINDOW *question_window, WINDOW *answer[4])
+void redraw_game_window(WINDOW *server_status, WINDOW *question_window,
+                        WINDOW *answer[4])
 {
     clear();
     refresh();
@@ -150,7 +156,8 @@ void redraw_game_window(WINDOW *server_status, WINDOW *question_window, WINDOW *
     wrefresh(server_status);
 }
 
-char get_behaviour(const char *nickname, WINDOW *create_button, WINDOW *join_button, WINDOW *exit_button,
+char get_behaviour(const char *nickname, WINDOW *create_button,
+                   WINDOW *join_button, WINDOW *exit_button,
                    char selectedBehaviour)
 {
     while (selectedBehaviour == BACK_TO_MAIN_MENU) {
@@ -175,15 +182,19 @@ void get_nickname(char *nickname)
     }
 }
 
-void main_menu_redraw(WINDOW *create_button, WINDOW *join_button, WINDOW *exit_button)
+void main_menu_redraw(WINDOW *create_button, WINDOW *join_button,
+                      WINDOW *exit_button)
 {
     clear();
     box(create_button, 0, 0);
     box(join_button, 0, 0);
     box(exit_button, 0, 0);
-    mvwprintw(create_button, 2, (MENU_CREATE_W / 2) - strlen("create game") / 2, "CREATE GAME");
-    mvwprintw(join_button, 2, (MENU_JOIN_W / 2) - strlen("join game") / 2, "JOIN GAME");
-    mvwprintw(exit_button, 2, (MENU_EXIT_W / 2) - strlen("exit game") / 2, "EXIT GAME");
+    mvwprintw(create_button, 2,
+              (MENU_CREATE_W / 2) - strlen("create game") / 2, "CREATE GAME");
+    mvwprintw(join_button, 2,
+              (MENU_JOIN_W / 2) - strlen("join game") / 2, "JOIN GAME");
+    mvwprintw(exit_button, 2,
+              (MENU_EXIT_W / 2) - strlen("exit game") / 2, "EXIT GAME");
     refresh();
     wrefresh(create_button);
     wrefresh(join_button);
@@ -230,7 +241,8 @@ void progress_show()
     }
 }
 
-void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window)
+void wait_players(WINDOW *answer[4], WINDOW *system_info,
+                  WINDOW *question_window)
 {
     pthread_t drawer;
     pthread_create(&drawer, 0, (void *)progress_show, NULL);
@@ -264,7 +276,8 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
             }
         }
         wclear(connectedStatus);
-        wprintw(connectedStatus, "%i / %i", r_info.occupancy + 1, r_info.room_size);
+        wprintw(connectedStatus, "%i / %i", r_info.occupancy + 1,
+                r_info.room_size);
         wrefresh(connectedStatus);
         //-----------------
     }
@@ -293,16 +306,21 @@ char select_size()
     MEVENT event;
     clear();
     WINDOW *choices[3];
-    mvwprintw(stdscr, 0, (80 / 2) - strlen("SELECT SIZE OF THE ROOM") / 2, "SELECT SIZE OF THE ROOM");
+    mvwprintw(stdscr, 0, (80 / 2) - strlen("SELECT SIZE OF THE ROOM") / 2,
+              "SELECT SIZE OF THE ROOM");
     wrefresh(stdscr);
     refresh();
     for(int i = 0; i < 3; i++) {
-        choices[i] = newwin(SELECT_BOX_H, SELECT_BOX_W, SPACER + SELECT_BOX_H * i, (80 - SELECT_BOX_W) / 2);
+        choices[i] = newwin(SELECT_BOX_H,
+                            SELECT_BOX_W, SPACER + SELECT_BOX_H * i,
+                            (80 - SELECT_BOX_W) / 2);
         box(choices[i], 0, 0);
         mvwprintw(choices[i], 2, 5, "%i", i + 2);
         wrefresh(choices[i]);
     }
-    WINDOW *back_button = newwin(BACK_BOX_H, BACK_BOX_W, SPACER + SELECT_BOX_H * 3, (80 - BACK_BOX_W) / 2);
+    WINDOW *back_button = newwin(BACK_BOX_H, BACK_BOX_W,
+                                 SPACER + SELECT_BOX_H * 3,
+                                 (80 - BACK_BOX_W) / 2);
     box(back_button, 0, 0);
     mvwprintw(back_button, 2, 8, "BACK");
     wrefresh(back_button);
@@ -310,7 +328,8 @@ char select_size()
         val = getch();
         if (val == KEY_MOUSE){
             getmouse(&event);
-            if (event.x >= (80 - SELECT_BOX_W) / 2 && event.x < (80 - SELECT_BOX_W) / 2 + SELECT_BOX_W){
+            if (event.x >= (80 - SELECT_BOX_W) / 2 &&
+                event.x < (80 - SELECT_BOX_W) / 2 + SELECT_BOX_W){
                 if (event.y >= SPACER) {
                     int winId = (event.y - SPACER) / SELECT_BOX_H;
                     switch (winId){
@@ -329,8 +348,10 @@ char select_size()
                     }
                 }
             }
-            if (event.x >= (80 - BACK_BOX_W) / 2 && event.x < (80 - BACK_BOX_W) / 2 + BACK_BOX_W) {
-                if (event.y >= SELECT_BOX_H * 3 + SPACER && event.y < SELECT_BOX_H * 3 + SPACER + BACK_BOX_H) {
+            if (event.x >= (80 - BACK_BOX_W) / 2 &&
+                event.x < (80 - BACK_BOX_W) / 2 + BACK_BOX_W) {
+                if (event.y >= SELECT_BOX_H * 3 + SPACER &&
+                    event.y < SELECT_BOX_H * 3 + SPACER + BACK_BOX_H) {
                     delete_wins(choices[0], choices[1], choices[2]);
                     delwin(back_button);
                     return BACK_TO_MAIN_MENU;
@@ -348,9 +369,11 @@ void delete_wins(WINDOW *win1, WINDOW *win2, WINDOW *win3)
     delwin(win3);
 }
 
-void highlight_selected(WINDOW* a_window, char a_text[A_LEN], int highlight_type)
+void highlight_selected(WINDOW* a_window, char a_text[A_LEN],
+                        int highlight_type)
 {
-    WINDOW* inner_text = derwin(a_window, ANSWER_HEIGHT - 2, ANSWER_WIDTH - 2, 1, 1);
+    WINDOW* inner_text = derwin(a_window, ANSWER_HEIGHT - 2, ANSWER_WIDTH - 2,
+                                1, 1);
     switch (highlight_type) {
         case HIGHLIGHT_BLUE:
             init_pair(20, COLOR_BLACK, COLOR_BLUE);
@@ -369,7 +392,8 @@ void highlight_selected(WINDOW* a_window, char a_text[A_LEN], int highlight_type
     wrefresh(inner_text);
 }
 
-int game_loop(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window, struct room_info r_info)
+int game_loop(WINDOW *answer[4], WINDOW *system_info,
+              WINDOW *question_window, struct room_info r_info)
 {
     MEVENT event;
     int status;
@@ -389,11 +413,13 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window, s
     }
     struct timeval time;
 
-    WINDOW *innertext = derwin(question_window, QUESTION_HEIGHT - 2, QUESTION_WIDTH - 2, 1, 1);
+    WINDOW *innertext = derwin(question_window,
+                               QUESTION_HEIGHT - 2, QUESTION_WIDTH - 2, 1, 1);
     wprintw(innertext, question.quest);
     wrefresh(innertext);
     for(int i = 0; i < 4; i++){
-        innertext = derwin(answer[i], ANSWER_HEIGHT - 2, ANSWER_WIDTH - 2, 1, 1);
+        innertext = derwin(answer[i], ANSWER_HEIGHT - 2, ANSWER_WIDTH - 2,
+                           1, 1);
         wprintw(innertext, question.ans[i]);
         wrefresh(innertext);
     }
