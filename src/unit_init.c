@@ -94,7 +94,6 @@ struct unit* unit_init (char* path)
     printf("%s \n",unitpath);
     d = opendir(unitpath);
     if (d) {
-        printf("tyt?\n");
         while ((dir = readdir(d)) != NULL) {
             /**
              * More magic
