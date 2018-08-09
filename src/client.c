@@ -6,7 +6,7 @@
 #include "unistd.h"
 #include "errno.h"
 #include "client_logic.h"
-#include "packet.h"
+#include "client_ui.h"
 
 #define ERR_CONN_FAIL       101
 #define ERR_CONF_SEND_FAIL  102
@@ -48,39 +48,6 @@
 #define ANSWER_HEIGHT   4
 #define QUESTION_HEIGHT 6
 #define SPACER          2
-
-void main_menu_redraw(WINDOW *create_button, WINDOW *join_button, WINDOW *exit_button);
-
-void get_nickname(char *nickname);
-
-char
-get_behaviour(const char *nickname, WINDOW *create_button, WINDOW *join_button, WINDOW *exit_button,
-              char selectedBehaviour);
-
-void redraw_game_window(WINDOW *server_status, WINDOW *question_window, WINDOW *answer[4]);
-
-void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow);
-
-void delete_wins(WINDOW *win1, WINDOW *win2, WINDOW *win3);
-
-char select_size();
-
-//shows buttons of available room sizes
-void highlight_selected(WINDOW* a_window, char a_text[A_LEN], int highlight_type);
-
-//main game loop
-int game_loop(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window, struct room_info r_info);
-
-void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow);
-
-//returns size of room, desired by user
-char mainMenu(const char nickname[52]);
-
-void refresh_values(char *desiredSize);
-
-int error_window(int error_type, bool is_retryable);
-
-void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_window);
 
 int main()
 {
@@ -276,6 +243,7 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
     wclear(connectedStatus);
     wprintw(connectedStatus, "1 / 4");
     wrefresh(connectedStatus);
+    int ret;
     while(errCode == WAIT_MORE) {
         //-----------------
         errCode = wait_for_players(&r_info);
@@ -286,6 +254,8 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
                     errCode = wait_for_players(&r_info);
                     break;
                 case HANDLE_STOP:
+                    pthread_cancel(drawer);
+                    pthread_join(drawer, &ret);
                     endwin();
                     finalize();
                     exit(-1);
@@ -299,6 +269,7 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info, WINDOW *question_windo
         //-----------------
     }
     pthread_cancel(drawer);
+    pthread_join(drawer, &ret);
     errCode = game_loop(answer, system_info, question_window, r_info);
 
     if (errCode == CODE_FAILURE){
