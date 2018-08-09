@@ -12,7 +12,7 @@
 #define ERROR_OUT_OF_MEMORY 2
 #define ERROR_INIT_UNITS    3
 #define ERROR_INIT_SOCKET   4
-#define ERROR_BIND_SOCKET   5 
+#define ERROR_BIND_SOCKET   5
 #define ERROR_RECIEVE_MSG   6
 #define ERROR_ACCEPT        7
 
@@ -62,7 +62,7 @@ int loop_recv(int socket, int msgid);
  * @param errno - error code
  * @return status
  */
-int error_handler(int errno);
+int server_error_handler(int errror_code);
 
 
 /**
@@ -70,7 +70,7 @@ int error_handler(int errno);
  * @param signal - received signal
  * @return status
  */
-int signal_handler(int signal);
+void signal_handler(int signal);
 
 
 /**

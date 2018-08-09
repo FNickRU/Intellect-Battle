@@ -13,7 +13,7 @@
 enum State {INIT, WAIT, GAME, GAMEOVER, FIN, EXIT};
 
 
-void room_fsm(void *room_info)
+void *room_fsm(void *room_info)
 {
     struct room_info room_i = *((struct room_info *) room_info);
 
