@@ -24,7 +24,7 @@ TEST_CL_SRC = client_logic
 TEST_CL_OBJ = $(TEST_CL_SRC:=.o)
 TEST_CL = $(patsubst %.o,test_%.out,$(TEST_CL_OBJ))
 
-TESTS = $(TEST_R) $(TEST_CL)
+TESTS = $(TEST_R) $(TEST_CL) $(TEST_SERV)
 
 CC = gcc
 CFLAGS = -std=gnu99 -I$(INC)
