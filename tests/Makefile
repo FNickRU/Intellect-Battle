@@ -14,11 +14,11 @@ OBJ = ../obj/test
 
 TEST_R_SRC = room
 TEST_R_OBJ = $(TEST_R_SRC:=.o)
-TEST_R = $(patsubst %.o,test_%.out,$(TEST_R_OBJ))
+TEST_R = $(patsubst %.o,test_%.out, $(TEST_R_OBJ))
 
 TEST_CL_SRC = client_logic
 TEST_CL_OBJ = $(TEST_CL_SRC:=.o)
-TEST_CL = $(patsubst %.o,test_%.out,$(TEST_CL_OBJ))
+TEST_CL = $(patsubst %.o,test_%.out, $(TEST_CL_OBJ))
 
 TESTS = $(TEST_R) $(TEST_CL)
 
@@ -37,6 +37,7 @@ build: clean all
 $(TEST_R): $(OBJ_DIR)/$(TEST_R_OBJ) $(TEST_R:.out=.o)
 	$(LINK) $(OBJ)/$(TEST_R:.out=.o) $(OBJ_DIR)/$(TEST_R_OBJ) \
 		$(LFLAGS) -o $(BIN_DIR)/$(TEST_R)
+
 $(TEST_CL): $(OBJ_DIR)/$(TEST_CL_OBJ) $(TEST_CL:.out=.o)
 	$(LINK) $(OBJ)/$(TEST_CL:.out=.o) $(OBJ_DIR)/$(TEST_CL_OBJ) \
 		$(LFLAGS) -o $(BIN_DIR)/$(TEST_CL)
@@ -54,7 +55,7 @@ test_r: $(BIN_DIR)/$(TEST_R)
 test_cl: $(BIN_DIR)/$(TEST_CL)
 	./$(BIN_DIR)/$(TEST_CL)
 
-run: test_r test_cl test_srv
+run: test_r test_cl
 
 deps:
 	/bin/bash ../check.sh $(DEPENDECIES_LIST)

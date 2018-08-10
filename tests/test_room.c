@@ -1,8 +1,8 @@
 /**
- * Tests for test.c.
+ * Tests for room.c.
  */
-#include "CUnit/Basic.h"
 #include <string.h>
+#include "CUnit/Basic.h"
 #include "room.h"
 
 /**
@@ -103,7 +103,7 @@ int clean_suite()
 
 void test_sendto_user_data()
 {
-    struct player user;
+    player_t user;
     char *data = NULL;
     unsigned int size = 2;
     CU_ASSERT(0 != sendto_user(user, (void *) data, size));
@@ -111,7 +111,7 @@ void test_sendto_user_data()
 
 void test_sendto_user_socket()
 {
-    struct player user;
+    player_t user;
     user.socket = 0;
     char data[] = "NULL";
     unsigned int size = 5;
@@ -120,7 +120,7 @@ void test_sendto_user_socket()
 
 void test_recvfrom_user_data()
 {
-    struct player user;
+    player_t user;
     char *data = NULL;
     unsigned int size = 2;
     CU_ASSERT(0 != recvfrom_user(user, (void *) data, size));
@@ -128,7 +128,7 @@ void test_recvfrom_user_data()
 
 void test_recvfrom_user_socket()
 {
-    struct player user;
+    player_t user;
     user.socket = 0;
     char data[] = "NULL";
     unsigned int size = 5;
