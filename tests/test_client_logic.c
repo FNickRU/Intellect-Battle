@@ -1,8 +1,8 @@
 /**
- * Tests for test.c.
+ * Tests for client_logic.c.
  */
-#include "CUnit/Basic.h"
 #include <string.h>
+#include "CUnit/Basic.h"
 #include "client_logic.h"
 
 /**

@@ -69,7 +69,8 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     /**
      * Inializing a server configuration
      */
-    struct server_conf *cfg = (struct server_conf*)malloc(sizeof(struct server_conf));
+    struct server_conf *cfg = (struct server_conf*)
+                               malloc(sizeof(struct server_conf));
     if (!(cfg)) {
         server_error_handler(ERROR_OUT_OF_MEMORY);
         free(worker_handlers);
@@ -84,12 +85,10 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     if (!(cfg->units)) {
         server_error_handler(ERROR_INIT_UNITS);
         msgctl(cfg->msgid, IPC_RMID, 0);
-        for (int i = 0 ; i < cfg->workers.size ; i++)
-        {
+        for (int i = 0; i < cfg->workers.size; i++) {
             pthread_join(cfg->workers.tid[i], NULL);
         }
-        for (int i = 0 ; i < cfg->rooms.size ; i++)
-        {
+        for (int i = 0; i < cfg->rooms.size; i++) {
             pthread_join(cfg->rooms.tid[i], NULL);
         }
         free(worker_handlers);
@@ -115,7 +114,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     for (int i = 0; i < rnum; i++) {
         pthread_create(&room_handlers[i], NULL, &room_fsm, &room);
     }
-    
+
     /**
      * Add a Socket
      */
@@ -133,7 +132,8 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     addr.sin_port = htons(PORT);
 
-    if (bind(cfg->socket, &addr, sizeof(struct sockaddr_in)) < 0) {
+    if (bind(cfg->socket, (struct sockaddr *)&addr,
+        sizeof(struct sockaddr_in)) < 0) {
         close(cfg->socket);
         server_error_handler(ERROR_BIND_SOCKET);
         free(worker_handlers);
@@ -178,13 +178,13 @@ int loop_recv(int socket, int msgid)
      */
     listen(socket, BACKLOG);
 
-
     c_msg.type = MSG_WRK;
     socklen_t socket_length = sizeof(struct sockaddr_in);
     struct sockaddr_in client_addr;
     while (1) {
         int serverd;
-        if ((serverd = accept(socket, &client_addr, &socket_length)) < 0) {
+        if ((serverd = accept(socket, (struct sockaddr *) &client_addr,
+            &socket_length)) < 0) {
             server_error_handler(ERROR_ACCEPT);
             server_finalize(server_finalize_conf);
         }
@@ -201,18 +201,17 @@ int loop_recv(int socket, int msgid)
 
 int server_error_handler(int error_code)
 {
-/**
- * ERROR CODE
- * 1 - Can't make a msg queue
- * 2 - Out of memory
- * 3 - Can't initialize a units
- * 4 - Can't get a socket
- * 5 - Can't bind a socket
- * 6 - Old errorcode
- * 7 - Can't accept the connection
-*/
-    switch (error_code)
-    {
+    /**
+     * ERROR CODE
+     * 1 - Can't make a msg queue
+     * 2 - Out of memory
+     * 3 - Can't initialize a units
+     * 4 - Can't get a socket
+     * 5 - Can't bind a socket
+     * 6 - Old errorcode
+     * 7 - Can't accept the connection
+    */
+    switch (error_code) {
         case 1:
             printf("ERROR: Can't make a msg queue\n");
             break;
@@ -250,12 +249,10 @@ int server_finalize(struct server_conf *conf)
     msgctl(conf->msgid, IPC_RMID, 0);
     close(conf->socket);
 
-    for (int i = 0 ; i < conf->workers.size ; i++)
-    {
+    for (int i = 0; i < conf->workers.size; i++) {
         pthread_join(conf->workers.tid[i], NULL);
     }
-    for (int i = 0 ; i < conf->rooms.size ; i++)
-    {
+    for (int i = 0; i < conf->rooms.size; i++) {
         pthread_join(conf->rooms.tid[i], NULL);
     }
 

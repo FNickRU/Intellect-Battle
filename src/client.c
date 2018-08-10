@@ -1,10 +1,11 @@
 #include <pthread.h>
-#include "ncurses.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "unistd.h"
-#include "errno.h"
+#include <ncurses.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+
 #include "client_logic.h"
 #include "client_ui.h"
 
@@ -86,7 +87,7 @@ int main()
     curs_set(false);
     int error_handle = HANDLE_OK;
     errCode = connect_to_server();
-    while (errCode != 0){
+    while (errCode == CODE_FAILURE) {
         error_handle = error_window(ERR_CONN_FAIL, true);
         switch (error_handle){
             case HANDLE_RETRY:
@@ -109,7 +110,7 @@ int main()
         if (behaviour == APPLICATION_EXIT){
             break;
         } else {
-            if (behaviour == 1){
+            if (behaviour == 1) {
                 type = REQ_JOIN;
                 roomSize = MAX_ROOM_SIZE;
             } else {
@@ -119,9 +120,9 @@ int main()
         }
         //------------------------------------
         errCode = send_conf(type, roomSize);
-        while (errCode == CODE_FAILURE){
+        while (errCode == CODE_FAILURE) {
             error_handle = error_window(ERR_CONF_SEND_FAIL, true);
-            switch (error_handle){
+            switch (error_handle) {
                 case HANDLE_RETRY:
                     errCode = send_conf(type, roomSize);
                     break;
@@ -177,7 +178,7 @@ void get_nickname(char *nickname)
     box(get_username, 0, 0);
     wrefresh(get_username);
     nickname[0] = 0;
-    while(nickname[0] == 0) {
+    while (nickname[0] == 0) {
         wscanw(input_field, "%s", nickname);
     }
 }
@@ -201,7 +202,7 @@ void main_menu_redraw(WINDOW *create_button, WINDOW *join_button,
     wrefresh(exit_button);
 }
 
-void progress_show()
+void *progress_show(void *arg)
 {
     init_pair(10, COLOR_WHITE, COLOR_WHITE);
     init_pair(11, COLOR_BLUE, COLOR_BLUE);
@@ -245,7 +246,7 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info,
                   WINDOW *question_window)
 {
     pthread_t drawer;
-    pthread_create(&drawer, 0, (void *)progress_show, NULL);
+    pthread_create(&drawer, 0, &progress_show, NULL);
     int errCode = WAIT_MORE;
     int error_handle;
     //-----------------
@@ -255,19 +256,18 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info,
     wclear(connectedStatus);
     wprintw(connectedStatus, "1 / 4");
     wrefresh(connectedStatus);
-    int ret;
     while(errCode == WAIT_MORE) {
         //-----------------
         errCode = wait_for_players(&r_info);
-        while (errCode == CODE_FAILURE){
+        while (errCode == CODE_FAILURE) {
             error_handle = error_window(ERR_WAIT_FAIL, true);
-            switch (error_handle){
+            switch (error_handle) {
                 case HANDLE_RETRY:
                     errCode = wait_for_players(&r_info);
                     break;
                 case HANDLE_STOP:
                     pthread_cancel(drawer);
-                    pthread_join(drawer, &ret);
+                    pthread_join(drawer, NULL);
                     endwin();
                     finalize();
                     exit(-1);
@@ -282,12 +282,12 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info,
         //-----------------
     }
     pthread_cancel(drawer);
-    pthread_join(drawer, &ret);
+    pthread_join(drawer, NULL);
     errCode = game_loop(answer, system_info, question_window, r_info);
 
-    if (errCode == CODE_FAILURE){
+    if (errCode == CODE_FAILURE) {
         error_handle = error_window(ERR_CONN_FAIL, false);
-        switch (error_handle){
+        switch (error_handle) {
             case HANDLE_RETRY:
                 break;
             case HANDLE_STOP:
@@ -310,7 +310,7 @@ char select_size()
               "SELECT SIZE OF THE ROOM");
     wrefresh(stdscr);
     refresh();
-    for(int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++) {
         choices[i] = newwin(SELECT_BOX_H,
                             SELECT_BOX_W, SPACER + SELECT_BOX_H * i,
                             (80 - SELECT_BOX_W) / 2);
@@ -324,15 +324,15 @@ char select_size()
     box(back_button, 0, 0);
     mvwprintw(back_button, 2, 8, "BACK");
     wrefresh(back_button);
-    while (1){
+    while (1) {
         val = getch();
-        if (val == KEY_MOUSE){
+        if (val == KEY_MOUSE) {
             getmouse(&event);
             if (event.x >= (80 - SELECT_BOX_W) / 2 &&
-                event.x < (80 - SELECT_BOX_W) / 2 + SELECT_BOX_W){
+                event.x < (80 - SELECT_BOX_W) / 2 + SELECT_BOX_W) {
                 if (event.y >= SPACER) {
                     int winId = (event.y - SPACER) / SELECT_BOX_H;
-                    switch (winId){
+                    switch (winId) {
                         case 0:
                             delete_wins(choices[0], choices[1], choices[2]);
                             delwin(back_button);
@@ -386,8 +386,9 @@ void highlight_selected(WINDOW* a_window, char a_text[A_LEN],
     }
     wattron(inner_text, COLOR_PAIR(20));
     wprintw(inner_text, a_text);
-    for (int i = 0; i < (ANSWER_WIDTH * ANSWER_HEIGHT) - strlen(a_text); i++)
+    for (uint i = 0; i < (ANSWER_WIDTH * ANSWER_HEIGHT) - strlen(a_text); i++) {
         waddch(inner_text, ' ');
+    }
     wattroff(inner_text, COLOR_PAIR(20));
     wrefresh(inner_text);
 }
@@ -399,7 +400,7 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info,
     int status;
     int val;
     WINDOW *nicks[4];
-    WINDOW *bwindow;
+    WINDOW *bwindow = NULL;
 
     redraw_game_window(system_info, question_window, answer);
     mvwprintw(system_info, 0, 63, "Users:");
@@ -417,7 +418,7 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info,
                                QUESTION_HEIGHT - 2, QUESTION_WIDTH - 2, 1, 1);
     wprintw(innertext, question.quest);
     wrefresh(innertext);
-    for(int i = 0; i < 4; i++){
+    for (int i = 0; i < 4; i++) {
         innertext = derwin(answer[i], ANSWER_HEIGHT - 2, ANSWER_WIDTH - 2,
                            1, 1);
         wprintw(innertext, question.ans[i]);
@@ -429,24 +430,27 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info,
         if (val == KEY_MOUSE) {
             getmouse(&event);
             if (event.x < ANSWER_WIDTH && event.y > QUESTION_HEIGHT + SPACER) {
-                char winId = ((char)event.y - (QUESTION_HEIGHT + SPACER)) / 4;
-                highlight_selected(answer[winId], question.ans[winId], HIGHLIGHT_BLUE);
+                int winId = ((char)event.y - (QUESTION_HEIGHT + SPACER)) / 4;
+                highlight_selected(answer[winId], question.ans[winId],
+                                   HIGHLIGHT_BLUE);
                 gettimeofday(&time, NULL);
                 status = send_ans(winId, time);
-                if (status != 0){
+                if (status != CODE_SUCCESS) {
                     break;
                 }
                 status = get_unit(&question, &r_info);
-                if (status != 0){
+                if (status != CODE_SUCCESS) {
                     break;
                 }
                 if (is_loser(r_info) == GAME_OVER) {
-                    highlight_selected(answer[winId], question.ans[winId], HIGHLIGHT_RED);
+                    highlight_selected(answer[winId], question.ans[winId],
+                                       HIGHLIGHT_RED);
                     sleep(1);
                     status = GAME_OVER;
                     break;
                 }
-                highlight_selected(answer[winId], question.ans[winId], HIGHLIGHT_GREEN);
+                highlight_selected(answer[winId], question.ans[winId],
+                                   HIGHLIGHT_GREEN);
                 sleep(1);
             }
         }
@@ -459,16 +463,17 @@ char mainMenu(const char nickname[52])
     MEVENT event;
     mvwprintw(stdscr, 0, 0, "Logged as %s", nickname);
     int val;
-    while(1){
+    while(1) {
         val = getch();
-        if (val == KEY_MOUSE){
+        if (val == KEY_MOUSE) {
             getmouse(&event);
-            if (event.x > (80 - MENU_CREATE_W) / 2 && event.x < (80 - MENU_CREATE_W) / 2 + MENU_CREATE_W){
+            if (event.x > (80 - MENU_CREATE_W) / 2
+                && event.x < (80 - MENU_CREATE_W) / 2 + MENU_CREATE_W) {
                 if (event.y >= SPACER) {
                     int winId = (event.y - SPACER) / 7;
                     int clickedPoint = (event.y - SPACER) % 7;
                     if (clickedPoint >= MENU_JOIN_H) continue;
-                    switch (winId){
+                    switch (winId) {
                         case 0://SELECTED CREATE
                             return select_size();
                         case 1://SELECTED JOIN
@@ -491,16 +496,30 @@ void refresh_values(char *desiredSize)
 
 void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow)
 {
-    for (int i = 0; i < r_info->occupancy; i++){
-        bwindow = newwin(NICKNAME_WIN_H, NICKNAME_WIN_W, 20 - NICKNAME_WIN_H * i, 80 - NICKNAME_WIN_W);
-        nicks[i] = derwin(bwindow, NICKNAME_WIN_H - 2, NICKNAME_WIN_W - 2, 1, 1);
+    for (int i = 0; i < r_info->occupancy; i++) {
+        bwindow = newwin(NICKNAME_WIN_H,
+                         NICKNAME_WIN_W,
+                         20 - NICKNAME_WIN_H * i,
+                         80 - NICKNAME_WIN_W);
+        nicks[i] = derwin(bwindow,
+                          NICKNAME_WIN_H - 2,
+                          NICKNAME_WIN_W - 2,
+                          1,
+                          1);
         wprintw(nicks[i], "%s", (*r_info).usernames[i]);
         box(bwindow, 0, 0);
         wrefresh(bwindow);
     }
-    for(int i = r_info->occupancy; i < 4; i++){
-        bwindow = newwin(NICKNAME_WIN_H, NICKNAME_WIN_W, 20 - NICKNAME_WIN_H * i, 80 - NICKNAME_WIN_W);
-        nicks[i] = derwin(bwindow, NICKNAME_WIN_H - 2, NICKNAME_WIN_W - 2, 1, 1);
+    for (int i = r_info->occupancy; i < 4; i++) {
+        bwindow = newwin(NICKNAME_WIN_H,
+                         NICKNAME_WIN_W,
+                         20 - NICKNAME_WIN_H * i,
+                         80 - NICKNAME_WIN_W);
+        nicks[i] = derwin(bwindow,
+                          NICKNAME_WIN_H - 2,
+                          NICKNAME_WIN_W - 2,
+                          1,
+                          1);
         wprintw(nicks[i], "NO_PLAYER");
         box(bwindow, 0, 0);
         wrefresh(bwindow);
@@ -524,36 +543,40 @@ int error_window(int error_type, bool is_retryable)
     mvwprintw(stop, 1, 1, "EXIT");
     switch (error_type) {
         case ERR_CONN_FAIL:
-            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING CONNECTION (%s)", strerror(errno));
+            mvwprintw(err_txt, 0, 0,
+                      "ERROR OCCURED DURING CONNECTION (%s)", strerror(errno));
             break;
         case ERR_CONF_SEND_FAIL:
-            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING SENDING CONFIGURATION TO SERVER (%s)", strerror(errno));
+            mvwprintw(err_txt, 0, 0,
+                    "ERROR OCCURED DURING SENDING CONFIGURATION TO SERVER (%s)",
+                    strerror(errno));
             break;
         case ERR_WAIT_FAIL:
-            mvwprintw(err_txt, 0, 0, "ERROR OCCURED DURING WAITING FOR PLAYERS (%s)", strerror(errno));
+            mvwprintw(err_txt, 0, 0,
+                "ERROR OCCURED DURING WAITING FOR PLAYERS (%s)",
+                strerror(errno));
             break;
     }
     MEVENT event;
     int val;
     wrefresh(err_win);
     wrefresh(retry);
-    while(1){
+    while(1) {
         val = getch();
-        if (val == KEY_MOUSE){
+        if (val == KEY_MOUSE) {
             getmouse(&event);
-            if (is_retryable && event.x >= 27 && event.x <= 33){
+            if (is_retryable && event.x >= 27 && event.x <= 33) {
                 if (event.y >= 15 && event.y <= 17) {
                     clear();
                     return HANDLE_RETRY;
                 }
-            }else{
-                if (event.x  >= 46 && event.x <= 52){
-                    if (event.y >= 15 && event.y <= 17){
+            } else {
+                if (event.x  >= 46 && event.x <= 52) {
+                    if (event.y >= 15 && event.y <= 17) {
                         return HANDLE_STOP;
                     }
                 }
             }
-
         }
     }
 }

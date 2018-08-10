@@ -1,7 +1,7 @@
 #include "server.h"
 
 #define WNUM 5
-#define RNUM 1
+#define RNUM 3
 
 int main(int argc, char *argv[])
 {

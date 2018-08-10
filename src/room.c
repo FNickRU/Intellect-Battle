@@ -47,7 +47,7 @@ void *room_fsm(void *room_info)
 
                 room_size = msg.room_size;
 
-                players = malloc(room_size * sizeof(players));
+                players = (struct player *) malloc(room_size * sizeof(players));
                 if (players == NULL) {
                     state = FIN;
                     printf("Room %x: Memory allocation failed!\n", getpid());
@@ -92,7 +92,7 @@ void *room_fsm(void *room_info)
                         players[player_id].username);
                 ++player_id;
 
-                if(player_id == room_size) {
+                if (player_id == room_size) {
                     state = GAME;
                 }
 
@@ -130,7 +130,7 @@ void *room_fsm(void *room_info)
 
 
                 /* Sending questions to players */
-                for(player_id = 0; player_id < room_size; ++player_id) {
+                for (player_id = 0; player_id < room_size; ++player_id) {
                     if (score[player_id] >= PLR_LOST &&
                         sendto_user(players[player_id],
                                     (void*)&spack, sizeof(spack)) < 0) {
@@ -144,7 +144,7 @@ void *room_fsm(void *room_info)
                 }
 
                 /* Receiving answers from players */
-                for(player_id = 0; player_id < room_size; ++player_id) {
+                for (player_id = 0; player_id < room_size; ++player_id) {
                     if (score[player_id] >= 0 &&
                         recvfrom_user(players[player_id],
                                     (void*)&cpack, sizeof(cpack)) < 0) {

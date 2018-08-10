@@ -1,8 +1,8 @@
 /**
- * Tests for test.c.
+ * Tests for room.c.
  */
-#include "CUnit/Basic.h"
 #include <string.h>
+#include "CUnit/Basic.h"
 #include "room.h"
 
 /**
