@@ -155,8 +155,8 @@ int clean_suite()
 
 void test_connect_to_server()
 {
-    memset(&Client_info, 0, sizeof(Client_info));
-    Client_info.socket = -1;
+    memset(&Client, 0, sizeof(Client));
+    Client.socket = -1;
     CU_ASSERT(CODE_FAILURE == connect_to_server());
 }
 

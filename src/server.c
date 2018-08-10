@@ -170,15 +170,15 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
  */
 int loop_recv(int socket, int msgid)
 {
-    struct msg c_msg;
-    int msg_size = sizeof(struct msg) - sizeof(long);
+    con_t connection;
+    int msg_size = sizeof(con_t) - sizeof(long);
 
     /**
      *  Now we are ready to receive messages.
      */
     listen(socket, BACKLOG);
 
-    c_msg.type = MSG_WRK;
+    connection.type = MSG_WRK;
     socklen_t socket_length = sizeof(struct sockaddr_in);
     struct sockaddr_in client_addr;
     while (1) {
@@ -192,9 +192,9 @@ int loop_recv(int socket, int msgid)
         /**
          * Put the message into the queue
          */
-        c_msg.socket = serverd;
+        connection.socket = serverd;
 
-        msgsnd(msgid, &c_msg, msg_size, 0);
+        msgsnd(msgid, &connection, msg_size, 0);
     }
     return 0;
 }

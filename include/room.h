@@ -7,6 +7,7 @@
 
 #include "msg_struct.h"
 #include "unit.h"
+#include "player.h"
 
 
 #define LAST_QUEST 15
@@ -29,7 +30,7 @@ struct room_info {
  * Room's final state machine. Should run in thread.
  * @param room_info Info to room. Should be convert to (struct room_info *).
  */
-void *room_fsm(void *room_info);
+void *room_fsm(void *arg);
 
 
 /**
@@ -39,8 +40,7 @@ void *room_fsm(void *room_info);
  * @param  data_size Size of data.
  * @return           0, if data sended successfully, else non-zero.
  */
-int sendto_user(struct player user,
-    void *data, unsigned int data_size);
+int sendto_user(player_t user, void *data, unsigned int data_size);
 
 
 /**
@@ -51,8 +51,7 @@ int sendto_user(struct player user,
  * @param  data_size Size of data to receive.
  * @return           0, if data received successfully, else non-zero.
  */
-int recvfrom_user(struct player user,
-    void *data, unsigned int data_size);
+int recvfrom_user(player_t user, void *data, unsigned int data_size);
 
 
 #endif // __ROOM_H

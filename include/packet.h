@@ -22,11 +22,12 @@
  */
 #define REQ_JOIN 0
 #define REQ_CREATE 1
-struct pack_join {
+struct pack_request {
     char type;
-    char room_size;
+    unsigned char room_size;
     char username[USERNAME_LEN];
 };
+typedef struct pack_request request_t;
 
 
 /**
@@ -35,9 +36,10 @@ struct pack_join {
  * @param timestamp Client-side time of player's answer.
  */
 struct pack_ans {
-    char ans;
+    unsigned char ans;
     struct timeval timestamp;
 };
+typedef struct pack_ans ans_t;
 
 
 /**
@@ -49,11 +51,12 @@ struct pack_ans {
  *                  of them.
  */
 struct pack_wait {
-    char occupancy;
-    char room_size;
-    char id;
+    unsigned char occupancy;
+    unsigned char room_size;
+    unsigned char id;
     char usernames[USER_COUNT][USERNAME_LEN];
 };
+typedef struct pack_wait waitinfo_t;
 
 
 /**
@@ -72,11 +75,12 @@ struct pack_wait {
 #define Q_LEN 200
 #define A_LEN 80
 struct pack_game {
-    char score[USER_COUNT];
+    unsigned char score[USER_COUNT];
     unsigned char quest_num;
     char quest[Q_LEN];
     char ans[ANSWER_COUNT][A_LEN];
 };
+typedef struct pack_game gameinfo_t;
 
 
 /**
@@ -92,15 +96,16 @@ struct pack_game {
 struct s_pack {
     int type;
     union {
-        struct pack_wait p_wait;
-        struct pack_game p_game;
+        waitinfo_t p_wait;
+        gameinfo_t p_game;
     };
 };
+typedef struct s_pack spack_t;
 
 
 /**
  * Client's packet structure.
- * @define C_JOIN Packet has 'join' information (see 'struct pack_join').
+ * @define C_JOIN Packet has 'join' information (see 'struct pack_request').
  * @define C_ANS  Packet has 'answer' information (see 'struct pack_ans').
  * @param  type   Define the information of packet. Values: C_JOIN, C_ANS.
  * @param  p_join 'Join' information.
@@ -111,10 +116,11 @@ struct s_pack {
 struct c_pack {
     int type;
     union {
-        struct pack_join p_join;
-        struct pack_ans p_ans;
+        request_t p_req;
+        ans_t p_ans;
     };
 };
+typedef struct c_pack cpack_t;
 
 
 #endif // __PACKET_H
