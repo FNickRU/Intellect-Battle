@@ -4,7 +4,6 @@
 #ifndef __SERVER_H
 #define __SERVER_H
 
-
 #include <pthread.h>
 #include "unit.h"
 
@@ -25,7 +24,6 @@ struct pool {
     int size;
 };
 
-
 /**
  * This structure describes the configuration of the server.
  */
@@ -37,16 +35,13 @@ struct server_conf {
     struct unit *units;
 };
 
-
 /**
  * Server initialization function.
- * @param db_path - path to the questions database
  * @param wnum - size of the pool of workers
  * @param wnum - room pool size
  * @return struct server_conf
  */
-struct server_conf *init_server(char *db_path, int wnum, int rnum);
-
+struct server_conf *init_server(int wnum, int rnum);
 
 /**
  * Function of accepting new connections.
@@ -55,7 +50,6 @@ struct server_conf *init_server(char *db_path, int wnum, int rnum);
  * @return status
  */
 int loop_recv(int socket, int msgid);
-
 
 /**
  * Error handling function.
@@ -72,13 +66,11 @@ int server_error_handler(int errror_code);
  */
 void signal_handler(int signal);
 
-
 /**
  * Function beautiful shutdown of the server.
  * @param conf - server configuration received after initialization
  * @return status
  */
 int server_finalize(struct server_conf *conf);
-
 
 #endif //__SERVER_H

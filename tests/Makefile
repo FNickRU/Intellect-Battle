@@ -55,7 +55,7 @@ test_r: $(BIN_DIR)/$(TEST_R)
 test_cl: $(BIN_DIR)/$(TEST_CL)
 	./$(BIN_DIR)/$(TEST_CL)
 
-run: test_r test_cl test_srv
+run: test_r test_cl
 
 deps:
 	/bin/bash ../check.sh $(DEPENDECIES_LIST)

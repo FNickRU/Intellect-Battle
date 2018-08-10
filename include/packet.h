@@ -7,6 +7,7 @@
 
 #include <sys/time.h>
 #include "player.h"
+#include "const.h"
 
 
 #define USER_COUNT 4
@@ -61,8 +62,6 @@ typedef struct pack_wait waitinfo_t;
 
 /**
  * Packet sent by room in game-time.
- * @define Q_LEN     Question length.
- * @define A_LEN     Answer length.
  * @param  score     Score of every player. Interpreted as signed decimal
  *                   number, sign show player's participation in the game.
  * @param  quest_num Question number (round number). Starts from 1, 0 defines
@@ -72,8 +71,6 @@ typedef struct pack_wait waitinfo_t;
  * @param  ans       Answer's strings.
  * @param  ans_len   Answer's length.
  */
-#define Q_LEN 200
-#define A_LEN 80
 struct pack_game {
     unsigned char score[USER_COUNT];
     unsigned char quest_num;

@@ -31,17 +31,16 @@ void *worker_fsm(void *arg)
     while (state != FIN) {
         switch (state) {
             case WAIT:
-                printf("Worker %x wait for connection\n", pthread_self());
+                printf("Worker %lx wait for connection\n", pthread_self());
 
                 if (msgrcv(msgqid, &con, sizeof(con), MSG_WRK, 0) < 0) {
-                    printf("Worker %x: message queue failed! (Reason: %s)\n",
+                    printf("Worker %lx: message queue failed! (Reason: %s)\n",
                            pthread_self(), strerror(errno));
 
                     state = FIN;
                 } else {
-                    printf("Worker %x received connection from %x\n",
-                           getpid(),
-                           con.socket);
+                    printf("Worker %lx received connection from %x\n",
+                           pthread_self(), con.socket);
 
                     socket = con.socket;
                     state = RECV;
@@ -49,14 +48,14 @@ void *worker_fsm(void *arg)
                 break;
 
             case RECV:
-                printf("Worker %x wait for join/create request\n",
+                printf("Worker %lx wait for join/create request\n",
                        pthread_self());
 
                 if (recv(socket, &pack, sizeof(pack), 0) < 0) {
                     state = ERROR;
                     err_type = RECV, err_arg = socket;
                 } else {
-                    printf("Worker %x wait for join/create request\n",
+                    printf("Worker %lx wait for join/create request\n",
                            pthread_self());
 
                     req = pack.p_req;
@@ -67,12 +66,12 @@ void *worker_fsm(void *arg)
                 join_msg.player.socket = socket;
                 strncpy(join_msg.player.username, req.username, USERNAME_LEN);
 
-                printf("Worker %x send to rooms pool user info: %s/%x\n",
+                printf("Worker %lx send to rooms pool user info: %s/%x\n",
                        pthread_self(), req.username, socket);
 
                 switch (req.type) {
                     case REQ_JOIN:
-                        printf("Worker %x send join request\n", pthread_self());
+                        printf("Worker %lx send join request\n", pthread_self());
 
                         join_msg.type = MSG_JOIN;
                         join_msg.room_size = req.room_size;
@@ -81,7 +80,7 @@ void *worker_fsm(void *arg)
                         break;
 
                     case REQ_CREATE:
-                        printf("Worker %x send 'create' request\n",
+                        printf("Worker %lx send 'create' request\n",
                                pthread_self());
 
                         join_msg.type = MSG_CREATE;
@@ -108,17 +107,17 @@ void error_handler(int state, int arg)
 {
     switch (state) {
         case RECV:
-            printf("Worker %x: connection error with %d!\n",
+            printf("Worker %lx: connection error with %d!\n",
                    pthread_self(), arg);
             break;
 
         case PROC:
-            printf("Worker %x: unexpected jointype (%d)!\n",
+            printf("Worker %lx: unexpected jointype (%d)!\n",
                    pthread_self(), arg);
             break;
 
         default:
-            printf("Worker %x: unknown error (arg: %d)!\n",
+            printf("Worker %lx: unknown error (arg: %d)!\n",
                    pthread_self(), arg);
     }
 }

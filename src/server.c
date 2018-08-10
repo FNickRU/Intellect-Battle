@@ -19,7 +19,7 @@
 
 struct server_conf *server_finalize_conf;
 
-struct server_conf *init_server(char *db_path,int wnum, int rnum)
+struct server_conf *init_server(int wnum, int rnum)
 {
 
     /**
@@ -81,7 +81,7 @@ struct server_conf *init_server(char *db_path,int wnum, int rnum)
     /**
      * Add unit point
      */
-    cfg->units = unit_init(db_path);
+    cfg->units = unit_deque_init();
     if (!(cfg->units)) {
         server_error_handler(ERROR_INIT_UNITS);
         msgctl(cfg->msgid, IPC_RMID, 0);
@@ -258,7 +258,7 @@ int server_finalize(struct server_conf *conf)
 
     free(conf->workers.tid);
     free(conf->rooms.tid);
-    unit_free_all(conf->units);
+    unit_deque_free(conf->units);
 
     free(conf);
     exit(1);
