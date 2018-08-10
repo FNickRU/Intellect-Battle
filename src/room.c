@@ -15,10 +15,11 @@ enum State {INIT, WAIT, GAME, GAMEOVER, FIN, EXIT};
 
 void *room_fsm(void *arg)
 {
-    struct room_info room_i = *((struct room_info *) arg);
+    room_t *info = (room_t *) arg;
 
-    int msgid = room_i.msgqid;
-    struct unit *units = room_i.units;
+    int msgqid = info->msgqid;
+    struct unit *units = info->units;
+    info->sync = SYNC_ON;
 
     int room_size,
         player_id,
@@ -39,7 +40,7 @@ void *room_fsm(void *arg)
                 num_quest = 1;
                 bzero(&spack, sizeof(spack));
 
-                if (msgrcv(msgid, &msg, sizeof(msg), MSG_ROOM, 0) < 0) {
+                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_ROOM, 0) < 0) {
                     state = FIN;
                     printf("Room %x: Message queue failed!\n", getpid());
                     break;
@@ -76,7 +77,7 @@ void *room_fsm(void *arg)
                 break;
 
             case WAIT:
-                if (msgrcv(msgid, &msg, sizeof(msg), MSG_JOIN, 0) < 0) {
+                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_JOIN, 0) < 0) {
                     state = FIN;
                     printf("Room %x: Message queue failed!\n", getpid());
                     break;

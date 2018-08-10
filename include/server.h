@@ -20,36 +20,40 @@
 * of the thread pool (workers or rooms).
 */
 struct pool {
-    pthread_t* tid;
+    pthread_t *tid;
     int size;
 };
+typedef struct pool pool_t;
 
 /**
  * This structure describes the configuration of the server.
  */
 struct server_conf {
     int socket;
-    int msgid;
-    struct pool workers;
-    struct pool rooms;
-    struct unit *units;
+    int msgqid;
+    pool_t workers;
+    pool_t rooms;
+    unit_t *units;
 };
+typedef struct server_conf sconf_t;
+
+/**
+ * Global server configuration.
+ */
+static sconf_t Server;
 
 /**
  * Server initialization function.
  * @param wnum - size of the pool of workers
  * @param wnum - room pool size
- * @return struct server_conf
  */
-struct server_conf *init_server(int wnum, int rnum);
+void init_server(int wnum, int rnum);
 
 /**
  * Function of accepting new connections.
- * @param socket - server socket received after initialization
- * @param msgid - message queue identifier
  * @return status
  */
-int loop_recv(int socket, int msgid);
+void loop_recv();
 
 /**
  * Error handling function.
@@ -68,9 +72,8 @@ void signal_handler(int signal);
 
 /**
  * Function beautiful shutdown of the server.
- * @param conf - server configuration received after initialization
  * @return status
  */
-int server_finalize(struct server_conf *conf);
+void server_finalize();
 
 #endif //__SERVER_H

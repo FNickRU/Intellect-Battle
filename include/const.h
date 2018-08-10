@@ -12,3 +12,9 @@
 #define A_LEN 82
 #define RA_LEN 3
 #define ANS_COUNT 4
+
+/**
+ * Synchronization constants
+ */
+#define SYNC_OFF 0
+#define SYNC_ON  1

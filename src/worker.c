@@ -15,11 +15,14 @@ enum State {WAIT, RECV, PROC, ERROR, FIN};
  * @param state - state of the machine on which error occurred
  * @param arg - additional argument, that depends on state (sockd or join_type)
  */
-void error_handler(int state, int arg);
+void worker_error_handler(int state, int arg);
 
 void *worker_fsm(void *arg)
 {
-    int msgqid = *((int *) arg);
+    worker_t *info = (worker_t *) arg;
+
+    int msgqid = info->msgqid;
+    info->sync = SYNC_ON;
 
     con_t con;
     cpack_t pack;
@@ -55,7 +58,7 @@ void *worker_fsm(void *arg)
                     state = ERROR;
                     err_type = RECV, err_arg = socket;
                 } else {
-                    printf("Worker %lx wait for join/create request\n",
+                    printf("Worker %lx received request\n",
                            pthread_self());
 
                     req = pack.p_req;
@@ -66,8 +69,15 @@ void *worker_fsm(void *arg)
                 join_msg.player.socket = socket;
                 strncpy(join_msg.player.username, req.username, USERNAME_LEN);
 
-                printf("Worker %lx send to rooms pool user info: %s/%x\n",
-                       pthread_self(), req.username, socket);
+                if (!strcmp(req.username, "")) {
+                    printf("Worker %lx received disconnect from %x\n",
+                           pthread_self(), socket);
+
+                    req.type = REQ_DISCONNECT;
+                } else {
+                    printf("Worker %lx send to rooms pool user info: %s/%x\n",
+                           pthread_self(), req.username, socket);
+                }
 
                 switch (req.type) {
                     case REQ_JOIN:
@@ -88,13 +98,18 @@ void *worker_fsm(void *arg)
                         msgsnd(msgqid, &join_msg, sizeof(join_msg), 0);
                         state = WAIT;
                         break;
+
+                    case REQ_DISCONNECT:
+                        state = WAIT;
+                        break;
+
                     default:
                         err_type = PROC, err_arg = req.type;
                 }
                 break;
 
             case ERROR:
-                error_handler(err_type, err_arg);
+                worker_error_handler(err_type, err_arg);
                 state = WAIT;
                 break;
         }
@@ -103,7 +118,7 @@ void *worker_fsm(void *arg)
     return NULL;
 }
 
-void error_handler(int state, int arg)
+void worker_error_handler(int state, int arg)
 {
     switch (state) {
         case RECV:
