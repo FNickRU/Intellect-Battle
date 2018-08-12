@@ -14,6 +14,7 @@ deploy:
     file:
         - ./bin/client.out
         - ./bin/server.out
+        - ./units/*.units
     skip_cleanup: true
     on:
         tags: true
