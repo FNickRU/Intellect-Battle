@@ -13,20 +13,21 @@
 enum State {INIT, WAIT, GAME, GAMEOVER, FIN, EXIT};
 
 
-void *room_fsm(void *room_info)
+void *room_fsm(void *arg)
 {
-    struct room_info room_i = *((struct room_info *) room_info);
+    room_t *info = (room_t *) arg;
 
-    int msgid = room_i.msgqid;
-    struct unit *units = room_i.units;
+    int msgqid = info->msgqid;
+    struct unit *units = info->units;
+    info->sync = SYNC_ON;
 
     int room_size,
         player_id,
         num_quest,
         step;
     char score[USER_COUNT];
-    struct msg_w msg;
-    struct player *players = NULL;
+    join_t msg;
+    player_t *players = NULL;
     struct s_pack spack;
     struct c_pack cpack;
 
@@ -39,7 +40,7 @@ void *room_fsm(void *room_info)
                 num_quest = 1;
                 bzero(&spack, sizeof(spack));
 
-                if (msgrcv(msgid, &msg, sizeof(msg), MSG_ROOM, 0) < 0) {
+                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_ROOM, 0) < 0) {
                     state = FIN;
                     printf("Room %x: Message queue failed!\n", getpid());
                     break;
@@ -47,14 +48,14 @@ void *room_fsm(void *room_info)
 
                 room_size = msg.room_size;
 
-                players = malloc(room_size * sizeof(players));
+                players = (player_t *) malloc(room_size * sizeof(player_t));
                 if (players == NULL) {
                     state = FIN;
                     printf("Room %x: Memory allocation failed!\n", getpid());
                     break;
                 }
 
-                players[player_id] = msg.player_info;
+                players[player_id] = msg.player;
                 score[player_id] = 0;
 
                 spack.type = S_WAIT;
@@ -76,13 +77,13 @@ void *room_fsm(void *room_info)
                 break;
 
             case WAIT:
-                if (msgrcv(msgid, &msg, sizeof(msg), MSG_JOIN, 0) < 0) {
+                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_JOIN, 0) < 0) {
                     state = FIN;
                     printf("Room %x: Message queue failed!\n", getpid());
                     break;
                 }
 
-                players[player_id] = msg.player_info;
+                players[player_id] = msg.player;
                 score[player_id] = 0;
 
                 spack.type = S_WAIT;
@@ -92,7 +93,7 @@ void *room_fsm(void *room_info)
                         players[player_id].username);
                 ++player_id;
 
-                if(player_id == room_size) {
+                if (player_id == room_size) {
                     state = GAME;
                 }
 
@@ -130,7 +131,7 @@ void *room_fsm(void *room_info)
 
 
                 /* Sending questions to players */
-                for(player_id = 0; player_id < room_size; ++player_id) {
+                for (player_id = 0; player_id < room_size; ++player_id) {
                     if (score[player_id] >= PLR_LOST &&
                         sendto_user(players[player_id],
                                     (void*)&spack, sizeof(spack)) < 0) {
@@ -144,7 +145,7 @@ void *room_fsm(void *room_info)
                 }
 
                 /* Receiving answers from players */
-                for(player_id = 0; player_id < room_size; ++player_id) {
+                for (player_id = 0; player_id < room_size; ++player_id) {
                     if (score[player_id] >= 0 &&
                         recvfrom_user(players[player_id],
                                     (void*)&cpack, sizeof(cpack)) < 0) {
@@ -192,13 +193,13 @@ void *room_fsm(void *room_info)
 }
 
 
-int sendto_user(struct player user, void *data, unsigned int data_size)
+int sendto_user(player_t user, void *data, unsigned int data_size)
 {
     return send(user.socket, data, data_size, 0);
 }
 
 
-int recvfrom_user(struct player user, void *data, unsigned int data_size)
+int recvfrom_user(player_t user, void *data, unsigned int data_size)
 {
     return recv(user.socket, data, data_size, 0);
 }

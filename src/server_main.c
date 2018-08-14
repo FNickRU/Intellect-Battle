@@ -1,13 +1,15 @@
 #include "server.h"
 
 #define WNUM 5
-#define RNUM 10
+#define RNUM 3
 
 int main(int argc, char *argv[])
-{    
-    struct server_conf *cfg;
-    cfg = init_server(argv[0],WNUM,RNUM);
-    loop_recv(cfg->socket,cfg->msgid);
-    server_finalize(cfg);
+{
+    init_server(WNUM, RNUM);
+
+    loop_recv();
+
+    server_finalize();
+
     return 0;
 }

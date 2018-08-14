@@ -203,6 +203,7 @@ void wait_players(WINDOW *answer[4], WINDOW *system_info,
     //set queue as 1/4 because no info
     wprintw(connectedStatus, "1 / 4");
     wrefresh(connectedStatus);
+
     pthread_t drawer;
     pthread_create(&drawer, 0, &progress_show, NULL);
 
@@ -302,8 +303,10 @@ char select_size()
             }
             if (event.x >= (TERMINAL_WIDTH - BACK_BOX_W) / 2 &&
                 event.x < (TERMINAL_WIDTH - BACK_BOX_W) / 2 + BACK_BOX_W) {
-                //SELECT_BOX_H - height of each box of room-size choices
-                //current condition detects all clicks under choices, but not higher than SPACER + BACK_BOX_H
+                /**
+                 * SELECT_BOX_H - height of each box of room-size choices
+                 * current condition detects all clicks under choices, but not higher than SPACER + BACK_BOX_H
+                 */
                 if (event.y >= SELECT_BOX_H * 3 + SPACER &&
                     event.y < SELECT_BOX_H * 3 + SPACER + BACK_BOX_H) {
                     delete_wins(choices[0], choices[1], choices[2]);
@@ -363,7 +366,7 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info,
     struct unit question;
 
     status = get_unit(&question, &r_info);
-    if (status == CODE_FAILURE){
+    if (status == CODE_FAILURE) {
         return CODE_FAILURE;
     }
     struct timeval time;
@@ -403,7 +406,7 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info,
                     error_window(GAME_LOST, true);
                     status = GAME_OVER;
                     break;
-                }else {
+                } else {
                     highlight_selected(answer[winId], question.ans[winId],
                                        HIGHLIGHT_GREEN);
                     sleep(1);

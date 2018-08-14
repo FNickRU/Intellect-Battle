@@ -3,7 +3,6 @@
  * @author Silkin Michail
  * @since 08.08.18
  */
-
 #ifndef __CLIENT_UI_H
 #define __CLIENT_UI_H
 
@@ -14,6 +13,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+
 #include "client_logic.h"
 
 #define GAME_LOST           301
