@@ -5,6 +5,8 @@
 #define __CLIENT_H
 
 #include "packet.h"
+#include "player.h"
+#include "const.h"
 
 /**
  * @define CODE_SUCCESS Function return successfully.
@@ -107,7 +109,7 @@ int wait_for_players(roominfo_t *room);
  */
 #define GAME_OVER 0
 #define GAME_CONT 1
-int get_unit(struct unit *u, roominfo_t *room);
+int get_unit(unit_t *u, roominfo_t *room);
 
 /**
  * Send client's answer to server.

@@ -18,3 +18,9 @@
  */
 #define SYNC_OFF 0
 #define SYNC_ON  1
+
+/**
+ * @define SERVER_PORT Port, binded to game server
+ */
+#define SERVER_PORT 1111
+#define SERVER_IP_STR "127.0.0.1"
