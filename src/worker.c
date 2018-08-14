@@ -81,7 +81,8 @@ void *worker_fsm(void *arg)
 
                 switch (req.type) {
                     case REQ_JOIN:
-                        printf("Worker %lx send join request\n", pthread_self());
+                        printf("Worker %lx send join request\n",
+                               pthread_self());
 
                         join_msg.type = MSG_JOIN;
                         join_msg.room_size = req.room_size;

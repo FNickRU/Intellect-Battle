@@ -1,5 +1,3 @@
-#include "room.h"
-#include "packet.h"
 #include <malloc.h>
 #include <sys/msg.h>
 #include <sys/socket.h>
@@ -7,189 +5,210 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <pthread.h>
 #include <unistd.h>
+#include <errno.h>
 
+#include "room.h"
+#include "packet.h"
 
 enum State {INIT, WAIT, GAME, GAMEOVER, FIN, EXIT};
-
 
 void *room_fsm(void *arg)
 {
     room_t *info = (room_t *) arg;
 
     int msgqid = info->msgqid;
-    struct unit *units = info->units;
+    unit_t *cur_unit = info->units;
+
     info->sync = SYNC_ON;
 
-    int room_size,
-        player_id,
-        num_quest,
-        step;
+    join_t join_req;
+    spack_t spack;
+    cpack_t cpack;
+
     char score[USER_COUNT];
-    join_t msg;
-    player_t *players = NULL;
-    struct s_pack spack;
-    struct c_pack cpack;
+    player_t players[USER_COUNT];
+
+    unsigned char room_size, last_plr_id, quest_num;
 
     int state = INIT;
     while (state != EXIT) {
         switch (state) {
             case INIT:
-                player_id = 0;
+                printf("Room %lx wait for first connection\n", pthread_self());
+
                 room_size = 0;
-                num_quest = 1;
+                last_plr_id = 0;
+                quest_num = 1;
+
                 bzero(&spack, sizeof(spack));
 
-                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_ROOM, 0) < 0) {
+                if (msgrcv(msgqid, &join_req, sizeof(join_req),
+                    MSG_ROOM, 0) < 0) {
+                    printf("Room %lx: message queue failed! (Reason: %s)\n",
+                           pthread_self(), strerror(errno));
+
                     state = FIN;
-                    printf("Room %x: Message queue failed!\n", getpid());
                     break;
                 }
+                printf("Room %lx received connection from %x\n",
+                       pthread_self(), join_req.player.socket);
 
-                room_size = msg.room_size;
 
-                players = (player_t *) malloc(room_size * sizeof(player_t));
-                if (players == NULL) {
-                    state = FIN;
-                    printf("Room %x: Memory allocation failed!\n", getpid());
-                    break;
-                }
+                room_size = join_req.room_size;
 
-                players[player_id] = msg.player;
-                score[player_id] = 0;
+                players[0] = join_req.player;
+                score[0] = 0;
 
                 spack.type = S_WAIT;
-                spack.p_wait.occupancy = player_id;
+                spack.p_wait.occupancy = 1;
                 spack.p_wait.room_size = room_size;
-                spack.p_wait.id = player_id;
-                strcpy(spack.p_wait.usernames[player_id],
-                        players[player_id].username);
+                spack.p_wait.id = 0;
+                strcpy(spack.p_wait.usernames[0], players[0].username);
 
-                state = WAIT;
+                if (sendto_user(players[0], &spack, sizeof(spack)) < 0) {
+                    printf("Room %lx: Failed send package to user!\n",
+                           pthread_self());
 
-                if (sendto_user(players[player_id],
-                    (void*)&spack, sizeof(spack)) < 0) {
                     state = FIN;
-                    printf("Room %x: Failed send package to user!\n", getpid());
                 } else {
-                    ++player_id;
+                    printf("Room %lx initialized\n", pthread_self());
+
+                    state = WAIT;
                 }
+
+                ++last_plr_id;
                 break;
 
             case WAIT:
-                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_JOIN, 0) < 0) {
+                printf("Room %lx wait for connection\n", pthread_self());
+
+                if (msgrcv(msgqid, &join_req, sizeof(join_req),
+                    MSG_JOIN, 0) < 0) {
+                    printf("Room %lx: message queue failed! (Reason: %s)\n",
+                           pthread_self(), strerror(errno));
+
                     state = FIN;
-                    printf("Room %x: Message queue failed!\n", getpid());
                     break;
                 }
 
-                players[player_id] = msg.player;
-                score[player_id] = 0;
+                players[last_plr_id] = join_req.player;
+                score[last_plr_id] = 0;
 
                 spack.type = S_WAIT;
-                spack.p_wait.occupancy = player_id;
+                spack.p_wait.occupancy = last_plr_id + 1;
                 spack.p_wait.room_size = room_size;
-                strcpy(spack.p_wait.usernames[player_id],
-                        players[player_id].username);
-                ++player_id;
+                strcpy(spack.p_wait.usernames[last_plr_id],
+                        players[last_plr_id].username);
 
-                if (player_id == room_size) {
+                if (last_plr_id + 1 == room_size) {
                     state = GAME;
                 }
+                ++last_plr_id;
 
-                for (int i = 0; i < player_id; ++i) {
-                    spack.p_wait.id = i;
+                for (int id = 0; id < last_plr_id; ++id) {
+                    spack.p_wait.id = id;
 
-                    if (sendto_user(players[i],
-                        (void*)&spack, sizeof(spack)) < 0) {
+                    if (sendto_user(players[id], &spack, sizeof(spack)) < 0) {
                         state = FIN;
-                        printf("Room %x: Failed send package to user!\n",
-                                getpid());
+                        printf("Room %lx: Failed send package to user!\n",
+                                pthread_self());
                         break;
                     }
                 }
                 break;
 
             case GAME:
-                if (num_quest != 0) {
-                    step = rand() % MAX_STEP;
-                    for (int i = 0; i < step; ++i) {
-                        units = units->next;
+                if (quest_num != 0) {
+                    int step = rand() % MAX_STEP + 1;
+
+                    for (int it = 0; it < step; ++it) {
+                        cur_unit = cur_unit->next;
                     }
 
-                    strcpy(spack.p_game.quest, units->quest);
-                    for (int i = 0; i < ANS_COUNT; ++i) {
-                        strcpy(spack.p_game.ans[i], units->ans[i]);
+                    strcpy(spack.p_game.quest, cur_unit->quest);
+
+                    for (int it = 0; it < ANS_COUNT; ++it) {
+                        strcpy(spack.p_game.ans[it], cur_unit->ans[it]);
                     }
+                } else {
+                    state = GAMEOVER;
+                    break;
                 }
 
                 spack.type = S_GAME;
                 for (int i = 0; i < room_size; ++i) {
                     spack.p_game.score[i] = score[i];
                 }
-                spack.p_game.quest_num = num_quest;
+                spack.p_game.quest_num = quest_num;
 
 
-                /* Sending questions to players */
-                for (player_id = 0; player_id < room_size; ++player_id) {
-                    if (score[player_id] >= PLR_LOST &&
-                        sendto_user(players[player_id],
-                                    (void*)&spack, sizeof(spack)) < 0) {
-                        score[player_id] = PLR_DISCONNECT;
-                        printf("Room %x: Player %s disconnected!\n",
-                                getpid(), players[player_id].username);
+                /**
+                 * Sending questions to players.
+                 */
+                for (int id = 0; id < room_size; ++id) {
+                    if (score[id] >= PLR_LOST
+                        && sendto_user(players[id], &spack,
+                                       sizeof(spack)) < 0) {
+                        score[id] = PLR_DISCONNECT;
+                        printf("Room %lx: Player %s disconnected!\n",
+                                pthread_self(), players[id].username);
                     }
-                    if (score[player_id] == PLR_LOST) {
-                        score[player_id] = PLR_DISCONNECT;
-                    }
-                }
-
-                /* Receiving answers from players */
-                for (player_id = 0; player_id < room_size; ++player_id) {
-                    if (score[player_id] >= 0 &&
-                        recvfrom_user(players[player_id],
-                                    (void*)&cpack, sizeof(cpack)) < 0) {
-                        score[player_id] = PLR_DISCONNECT;
-                        printf("Room %x: Player %s disconnected!\n",
-                                getpid(), players[player_id].username);
-                    } else if (cpack.p_ans.ans == units->rans) {
-                        score[player_id]++;
-                    } else {
-                        score[player_id] = PLR_LOST;
+                    if (score[id] == PLR_LOST) {
+                        score[id] = PLR_DISCONNECT;
                     }
                 }
 
-                if (num_quest > LAST_QUEST) {
-                    num_quest = 0;
-                } else if (num_quest == 0) {
-                    state = GAMEOVER;
+                /**
+                 * Receiving answers from players.
+                 */
+                for (int id = 0; id < room_size; ++id) {
+                    if (score[id] > PLR_LOST) {
+                        if (recvfrom_user(players[id], &cpack,
+                            sizeof(cpack)) < 0) {
+                            score[id] = PLR_DISCONNECT;
+
+                            printf("Room %lx: Player %s disconnected!\n",
+                                    pthread_self(), players[id].username);
+                        } else if (cpack.p_ans.ans == cur_unit->rans) {
+                            score[last_plr_id]++;
+                        } else {
+                            score[last_plr_id] = PLR_LOST;
+                        }
+                    }
+                }
+
+                if (quest_num == LAST_QUEST) {
+                    quest_num = 0;
                 } else {
-                    ++num_quest;
+                    ++quest_num;
                 }
                 break;
 
             case GAMEOVER:
-                for (player_id = 0; player_id < room_size; ++player_id) {
-                    close(players[player_id].socket);
+                printf("Room %lx: game over\n", pthread_self());
+
+                for (int id = 0; id < room_size; ++id) {
+                    close(players[id].socket);
                 }
-                free(players);
-                players = NULL;
+
                 state = INIT;
                 break;
 
             case FIN:
-                for (player_id = 0; player_id < room_size; ++player_id) {
-                    if (close(players[player_id].socket) < 0) {
-                        break;
-                    }
+                printf("Room %lx finalized\n", pthread_self());
+
+                for (int id = 0; id < last_plr_id; ++id) {
+                    close(players[id].socket);
                 }
-                if (players != NULL) {
-                    free(players);
-                }
+
                 state = EXIT;
                 break;
         }
     }
+
+    return NULL;
 }
 
 
