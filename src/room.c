@@ -172,9 +172,9 @@ void *room_fsm(void *arg)
                             printf("Room %lx: Player %s disconnected!\n",
                                     pthread_self(), players[id].username);
                         } else if (cpack.p_ans.ans == cur_unit->rans) {
-                            score[last_plr_id]++;
+                            score[id]++;
                         } else {
-                            score[last_plr_id] = PLR_LOST;
+                            score[id] = PLR_LOST;
                         }
                     }
                 }
