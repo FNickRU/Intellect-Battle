@@ -96,6 +96,7 @@ int wait_for_players(struct room_info *room)
             }
             break;
         case S_GAME:
+            return START_GAME;
         default:
             return CODE_FAILURE;
             break;
