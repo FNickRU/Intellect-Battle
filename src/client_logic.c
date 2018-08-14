@@ -89,13 +89,14 @@ int wait_for_players(struct room_info *room)
                     USERNAME_LEN);
                 room->score[i] = 0;
             }
-            if (room->occupancy < room->room_size) {
+            if (room->occupancy < room->room_size - 1) {
                 return WAIT_MORE;
             } else {
                 return START_GAME;
             }
             break;
         case S_GAME:
+            return START_GAME;
         default:
             return CODE_FAILURE;
             break;

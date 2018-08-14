@@ -3,9 +3,86 @@
  * @author Silkin Michail
  * @since 08.08.18
  */
-
 #ifndef __CLIENT_UI_H
 #define __CLIENT_UI_H
+
+#include <pthread.h>
+#include <ncurses.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include "client_logic.h"
+
+#define GAME_LOST           301
+
+#define ERR_CONN_FAIL       101
+#define ERR_CONF_SEND_FAIL  102
+#define ERR_WAIT_FAIL       103
+
+#define HANDLE_OK           200
+#define HANDLE_RETRY        201
+#define HANDLE_STOP         202
+
+#define TERMINAL_WIDTH      80
+#define MAX_ROOM_SIZE       4
+#define APPLICATION_EXIT    (-1)
+#define APPLICATION_ERROR   (-1)
+
+#define HIGHLIGHT_RED       2
+#define HIGHLIGHT_GREEN     1
+#define HIGHLIGHT_BLUE      0
+
+#define SELECT_BOX_H        5
+#define SELECT_BOX_W        11
+#define BACK_BOX_W          20
+#define BACK_BOX_H          5
+#define BACK_TO_MAIN_MENU   (-2)
+#define ROOM_FOR_FOUR       4
+#define ROOM_FOR_THREE      3
+#define ROOM_FOR_TWO        2
+#define ROOM_JOIN           1
+
+#define NICKNAME_WIN_W      27
+#define NICKNAME_WIN_H      4
+#define NICKNAME_SPACER     20
+
+#define MENU_CREATE_W       50
+#define MENU_CREATE_H       5
+#define MENU_JOIN_W         50
+#define MENU_JOIN_H         5
+#define MENU_EXIT_W         50
+#define MENU_EXIT_H         5
+
+#define ANSWER_WIDTH        50
+#define QUESTION_WIDTH      70
+#define ANSWER_HEIGHT       4
+#define QUESTION_HEIGHT     6
+#define SPACER              2
+
+#define ERR_BOX_H           10
+#define ERR_BOX_W           30
+#define ERR_BOX_OFFT_Y      9
+#define ERR_BOX_OFFT_X      25
+#define RETRY_BOX_H         3
+#define RETRY_BOX_W         7
+#define REL_RETRY_BOX_OFFT_Y 6
+#define REL_RETRY_BOX_OFFT_X 2
+#define EXIT_BOX_H          3
+#define EXIT_BOX_W          7
+#define REL_EXIT_BOX_OFFT_Y 6
+#define REL_EXIT_BOX_OFFT_X 21
+
+#define PROGRESS_WINDOW_BORDER_H 5
+#define PROGRESS_WINDOW_BORDER_W 50
+#define PROGRESS_WINDOW_BORDER_OFFT_X 15
+#define PROGRESS_WINDOW_BORDER_OFFT_Y 0
+
+#define FREE_COLOR_PAIR 20
+#define USERS_TXT_OFFT_X 63
+#define USERS_TXT_OFFT_Y 0
 
 /**
  * Drawing main menu with choice of which game should be started
