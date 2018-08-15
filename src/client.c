@@ -234,6 +234,9 @@ void wait_players(WINDOW *answer[ANS_COUNT],
                   WINDOW *system_info,
                   WINDOW *question_window)
 {
+    clear();
+    refresh();
+
     int errCode = WAIT_MORE;
     int error_handle;
 
