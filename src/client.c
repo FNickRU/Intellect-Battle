@@ -293,7 +293,7 @@ void wait_players(WINDOW *answer[ANS_COUNT],
 char select_size()
 {
     int val;
-    MEVENT event;
+    MEVENT ev;
     WINDOW *choices[3];
 
     clear();
@@ -330,12 +330,12 @@ char select_size()
     while (1) {
         val = getch();
         if (val == KEY_MOUSE) {
-            getmouse(&event);
+            getmouse(&ev);
 
-            if (event.x >= (TERMINAL_WIDTH - SELECT_BOX_W) / 2 &&
-                event.x < (TERMINAL_WIDTH - SELECT_BOX_W) / 2 + SELECT_BOX_W) {
-                if (event.y >= SPACER) {
-                    int winId = (event.y - SPACER) / SELECT_BOX_H;
+            if (ev.x >= (TERMINAL_WIDTH - SELECT_BOX_W) / 2 &&
+                ev.x < (TERMINAL_WIDTH - SELECT_BOX_W) / 2 + SELECT_BOX_W) {
+                if (ev.y >= SPACER) {
+                    int winId = (ev.y - SPACER) / SELECT_BOX_H;
                     switch (winId) {
                         case 0:
                             delete_wins(choices[0], choices[1], choices[2]);
@@ -355,15 +355,15 @@ char select_size()
                 }
             }
 
-            if (event.x >= (TERMINAL_WIDTH - BACK_BOX_W) / 2 &&
-                event.x < (TERMINAL_WIDTH - BACK_BOX_W) / 2 + BACK_BOX_W) {
+            if (ev.x >= (TERMINAL_WIDTH - BACK_BOX_W) / 2 &&
+                ev.x < (TERMINAL_WIDTH - BACK_BOX_W) / 2 + BACK_BOX_W) {
                 /**
                  * SELECT_BOX_H - height of each box of room-size choices
                  * Current condition detects all clicks under choices,
                  * but not higher than SPACER + BACK_BOX_H
                  */
-                if (event.y >= SELECT_BOX_H * 3 + SPACER
-                    && event.y < SELECT_BOX_H * 3 + SPACER + BACK_BOX_H) {
+                if (ev.y >= SELECT_BOX_H * 3 + SPACER
+                    && ev.y < SELECT_BOX_H * 3 + SPACER + BACK_BOX_H) {
                     delete_wins(choices[0], choices[1], choices[2]);
                     delwin(back_button);
 
@@ -418,20 +418,22 @@ void highlight_selected(WINDOW* a_window, char a_text[A_LEN],
     wrefresh(inner_text);
 }
 
-int game_loop(WINDOW *answer[4], WINDOW *system_info,
-              WINDOW *question_window, struct room_info r_info)
+int game_loop(WINDOW *answer[ANS_COUNT],
+              WINDOW *system_info,
+              WINDOW *question_window,
+              roominfo_t r_info)
 {
-    MEVENT event;
+    MEVENT ev;
     int status;
     int val;
-    WINDOW *nicks[4];
+    WINDOW *nicks[USER_COUNT];
     WINDOW *bwindow = NULL;
 
     redraw_game_window(system_info, question_window, answer);
     mvwprintw(system_info, USERS_TXT_OFFT_Y, USERS_TXT_OFFT_X, "Users:");
     wrefresh(system_info);
     print_nickname(&r_info, nicks, bwindow);
-    struct unit question;
+    unit_t question;
 
     status = get_unit(&question, &r_info);
     if (status == CODE_FAILURE) {
@@ -440,43 +442,64 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info,
     struct timeval time;
 
     WINDOW *innertext = derwin(question_window,
-                               QUESTION_HEIGHT - 2, QUESTION_WIDTH - 2, 1, 1);
+                               QUESTION_HEIGHT - 2,
+                               QUESTION_WIDTH - 2,
+                               1,
+                               1);
+
     wprintw(innertext, question.quest);
     wrefresh(innertext);
-    for (int i = 0; i < 4; i++) {
-        innertext = derwin(answer[i], ANSWER_HEIGHT - 2, ANSWER_WIDTH - 2,
-                           1, 1);
-        wprintw(innertext, question.ans[i]);
+
+    for (int it = 0; it < ANS_COUNT; ++it) {
+        innertext = derwin(answer[it],
+                           ANSWER_HEIGHT - 2,
+                           ANSWER_WIDTH - 2,
+                           1,
+                           1);
+
+        wprintw(innertext, question.ans[it]);
         wrefresh(innertext);
     }
 
     while (status == GAME_CONT) {
         val = getch();
+
         if (val == KEY_MOUSE) {
-            getmouse(&event);
-            if (event.x < ANSWER_WIDTH && event.y > QUESTION_HEIGHT + SPACER) {
-                char winId = (char)((event.y - (QUESTION_HEIGHT + SPACER)) / 4);
-                highlight_selected(answer[winId], question.ans[winId],
+            getmouse(&ev);
+
+            if (ev.x < ANSWER_WIDTH && ev.y > QUESTION_HEIGHT + SPACER) {
+                int winId = (ev.y - (QUESTION_HEIGHT + SPACER)) / 4;
+
+                highlight_selected(answer[winId],
+                                   question.ans[winId],
                                    HIGHLIGHT_BLUE);
+
                 gettimeofday(&time, NULL);
                 status = send_ans(winId, time);
+
                 if (status != CODE_SUCCESS) {
                     break;
                 }
+
                 status = get_unit(&question, &r_info);
                 if (status != CODE_SUCCESS) {
                     break;
                 }
+
                 if (is_loser(r_info) == GAME_OVER) {
-                    highlight_selected(answer[winId], question.ans[winId],
+                    highlight_selected(answer[winId],
+                                       question.ans[winId],
                                        HIGHLIGHT_RED);
+
                     sleep(1);
                     error_window(GAME_LOST, true);
+
                     status = GAME_OVER;
                     break;
                 } else {
                     highlight_selected(answer[winId], question.ans[winId],
                                        HIGHLIGHT_GREEN);
+
                     sleep(1);
                 }
             }
@@ -487,26 +510,44 @@ int game_loop(WINDOW *answer[4], WINDOW *system_info,
 
 char mainMenu(const char nickname[52])
 {
-    MEVENT event;
-    mvwprintw(stdscr, 0, 0, "Logged as %s", nickname);
+    MEVENT ev;
     int val;
+
+    mvwprintw(stdscr, 0, 0, "Logged as %s", nickname);
+
     while(1) {
         val = getch();
+
         if (val == KEY_MOUSE) {
-            getmouse(&event);
-            if (event.x > (TERMINAL_WIDTH - MENU_CREATE_W) / 2
-                && event.x < (TERMINAL_WIDTH - MENU_CREATE_W) / 2 + MENU_CREATE_W) {
-                if (event.y >= SPACER) {
-                    int winId = (event.y - SPACER) / (MENU_CREATE_H + SPACER);
-                    int clickedPoint = (event.y - SPACER) % (MENU_CREATE_H + SPACER);
-                    if (clickedPoint >= MENU_JOIN_H) continue;
+            getmouse(&ev);
+
+            if (ev.x > (TERMINAL_WIDTH - MENU_CREATE_W) / 2 &&
+                ev.x < (TERMINAL_WIDTH - MENU_CREATE_W) / 2 + MENU_CREATE_W) {
+                if (ev.y >= SPACER) {
+                    int winId = (ev.y - SPACER) / (MENU_CREATE_H + SPACER);
+                    int clkPnt = (ev.y - SPACER) % (MENU_CREATE_H + SPACER);
+
+                    if (clkPnt >= MENU_JOIN_H) {
+                        continue;
+                    }
+
                     switch (winId) {
-                        case 0://SELECTED CREATE
+                        /**
+                         * Selected 'Create'
+                         */
+                        case 0:
                             return select_size();
-                        case 1://SELECTED JOIN
+
+                        /**
+                         * Selected 'Join'
+                         */
+                        case 1:
                             return ROOM_JOIN;
-                        case 2://SELECTED EXIT
-                            return APPLICATION_EXIT;
+
+                        /**
+                         * Selected 'Exit'
+                         */
+                        case 2:
                         default:
                             return APPLICATION_EXIT;
                     }
@@ -521,34 +562,43 @@ void refresh_values(char *desiredSize)
     *desiredSize = BACK_TO_MAIN_MENU;
 }
 
-void print_nickname(struct room_info *r_info, WINDOW *nicks[4], WINDOW *bwindow)
+void print_nickname(roominfo_t *r_info,
+                    WINDOW *nicks[USER_COUNT],
+                    WINDOW *bwindow)
 {
-    for (int i = 0; i < r_info->occupancy; i++) {
+    for (int it = 0; it < r_info->occupancy; ++it) {
         bwindow = newwin(NICKNAME_WIN_H,
                          NICKNAME_WIN_W,
-                         NICKNAME_SPACER - NICKNAME_WIN_H * i,
+                         NICKNAME_SPACER - NICKNAME_WIN_H * it,
                          TERMINAL_WIDTH - NICKNAME_WIN_W);
-        nicks[i] = derwin(bwindow,
-                          NICKNAME_WIN_H - 2,
-                          NICKNAME_WIN_W - 2,
-                          1,
-                          1);
-        wprintw(nicks[i], "%s", (*r_info).usernames[i]);
+
+        nicks[it] = derwin(bwindow,
+                           NICKNAME_WIN_H - 2,
+                           NICKNAME_WIN_W - 2,
+                           1,
+                           1);
+
+        wprintw(nicks[it], "%s", (*r_info).usernames[it]);
         box(bwindow, 0, 0);
+
         wrefresh(bwindow);
     }
-    for (int i = r_info->occupancy; i < MAX_ROOM_SIZE; i++) {
+
+    for (int it = r_info->occupancy; it < MAX_ROOM_SIZE; ++it) {
         bwindow = newwin(NICKNAME_WIN_H,
                          NICKNAME_WIN_W,
-                         NICKNAME_SPACER - NICKNAME_WIN_H * i,
+                         NICKNAME_SPACER - NICKNAME_WIN_H * it,
                          TERMINAL_WIDTH - NICKNAME_WIN_W);
-        nicks[i] = derwin(bwindow,
-                          NICKNAME_WIN_H - 2,
-                          NICKNAME_WIN_W - 2,
-                          1,
-                          1);
-        wprintw(nicks[i], "NO_PLAYER");
+
+        nicks[it] = derwin(bwindow,
+                           NICKNAME_WIN_H - 2,
+                           NICKNAME_WIN_W - 2,
+                           1,
+                           1);
+
+        wprintw(nicks[it], "NO_PLAYER");
         box(bwindow, 0, 0);
+
         wrefresh(bwindow);
     }
 }
@@ -557,58 +607,89 @@ int error_window(int error_type, bool is_retryable)
 {
     clear();
     refresh();
-    WINDOW *err_win = newwin(ERR_BOX_H, ERR_BOX_W, ERR_BOX_OFFT_Y, ERR_BOX_OFFT_X);
+
+    WINDOW *err_win = newwin(ERR_BOX_H,
+                             ERR_BOX_W,
+                             ERR_BOX_OFFT_Y,
+                             ERR_BOX_OFFT_X);
+
     WINDOW *err_txt = derwin(err_win, ERR_BOX_H - 2, ERR_BOX_W - 2, 1, 1);
-    WINDOW *retry = derwin(err_win, RETRY_BOX_H, RETRY_BOX_W, REL_RETRY_BOX_OFFT_Y, REL_RETRY_BOX_OFFT_X);
-    WINDOW *stop  = derwin(err_win, EXIT_BOX_H, EXIT_BOX_W, REL_EXIT_BOX_OFFT_Y, REL_EXIT_BOX_OFFT_X);
+
+    WINDOW *retry = derwin(err_win,
+                           RETRY_BOX_H,
+                           RETRY_BOX_W,
+                           REL_RETRY_BOX_OFFT_Y,
+                           REL_RETRY_BOX_OFFT_X);
+
+    WINDOW *stop  = derwin(err_win,
+                           EXIT_BOX_H,
+                           EXIT_BOX_W,
+                           REL_EXIT_BOX_OFFT_Y,
+                           REL_EXIT_BOX_OFFT_X);
+
     box(stop, 0, 0);
     box(err_win, 0, 0);
+
     if (is_retryable) {
         box(retry, 0, 0);
         mvwprintw(retry, 1, 1, "RETRY");
     }
+
     mvwprintw(stop, 1, 1, "EXIT");
+
     switch (error_type) {
         case ERR_CONN_FAIL:
             mvwprintw(err_txt, 0, 0,
                       "ERROR OCCURED DURING CONNECTION (%s)", strerror(errno));
             break;
+
         case ERR_CONF_SEND_FAIL:
             mvwprintw(err_txt, 0, 0,
-                    "ERROR OCCURED DURING SENDING CONFIGURATION TO SERVER (%s)",
-                    strerror(errno));
-            break;
-        case ERR_WAIT_FAIL:
-            mvwprintw(err_txt, 0, 0,
-                "ERROR OCCURED DURING WAITING FOR PLAYERS (%s)",
+                "ERROR OCCURED DURING SENDING CONFIGURATION TO SERVER (%s)",
                 strerror(errno));
             break;
+
+        case ERR_WAIT_FAIL:
+            mvwprintw(err_txt, 0, 0,
+                      "ERROR OCCURED DURING WAITING FOR PLAYERS (%s)",
+                      strerror(errno));
+            break;
+
         case GAME_LOST:
             mvwprintw(err_txt, 0, 0,
                       "Oh no, you lost!",
                       strerror(errno));
             break;
+
         default:
             return HANDLE_STOP;
     }
-    MEVENT event;
+
+    MEVENT ev;
     int val;
+
     wrefresh(err_win);
     wrefresh(retry);
+
     while(1) {
         val = getch();
+
         if (val == KEY_MOUSE) {
-            getmouse(&event);
-            if (is_retryable && event.x >= ERR_BOX_OFFT_X + REL_RETRY_BOX_OFFT_X
-                && event.x < ERR_BOX_OFFT_X + REL_RETRY_BOX_OFFT_X + RETRY_BOX_W) {
-                if (event.y >= ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y && event.y < ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y + RETRY_BOX_H) {
+            getmouse(&ev);
+
+            if (is_retryable
+                && ev.x >= ERR_BOX_OFFT_X + REL_RETRY_BOX_OFFT_X
+                && ev.x < ERR_BOX_OFFT_X + REL_RETRY_BOX_OFFT_X + RETRY_BOX_W) {
+                if (ev.y >= ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y &&
+                    ev.y < ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y + RETRY_BOX_H) {
                     clear();
                     return HANDLE_RETRY;
                 }
             } else {
-                if (event.x >= ERR_BOX_OFFT_X + REL_EXIT_BOX_OFFT_X
-                    && event.x < ERR_BOX_OFFT_X + REL_EXIT_BOX_OFFT_X + EXIT_BOX_W) {
-                    if (event.y >= ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y && event.y < ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y + EXIT_BOX_H) {
+                if (ev.x >= ERR_BOX_OFFT_X + REL_EXIT_BOX_OFFT_X &&
+                    ev.x < ERR_BOX_OFFT_X + REL_EXIT_BOX_OFFT_X + EXIT_BOX_W) {
+                    if (ev.y >= ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y &&
+                        ev.y < ERR_BOX_OFFT_Y + REL_RETRY_BOX_OFFT_Y + EXIT_BOX_H) {
                         return HANDLE_STOP;
                     }
                 }
