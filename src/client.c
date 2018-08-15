@@ -47,11 +47,14 @@ int main()
             case HANDLE_RETRY:
                 errCode = connect_to_server();
                 break;
+
             case HANDLE_STOP:
-            default:
                 endwin();
                 finalize();
                 exit(APPLICATION_ERROR);
+
+            default:
+                break;
         }
     }
 
@@ -82,11 +85,14 @@ int main()
                 case HANDLE_RETRY:
                     errCode = send_conf(type, roomSize);
                     break;
+
                 case HANDLE_STOP:
-                default:
                     endwin();
                     finalize();
                     exit(APPLICATION_ERROR);
+
+                default:
+                    break;
             }
         }
 
@@ -254,12 +260,14 @@ void wait_players(WINDOW *answer[ANS_COUNT],
                     break;
 
                 case HANDLE_STOP:
-                default:
                     pthread_cancel(drawer);
                     pthread_join(drawer, NULL);
                     endwin();
                     finalize();
                     exit(APPLICATION_ERROR);
+
+                default:
+                    break;
             }
         }
 
@@ -282,10 +290,12 @@ void wait_players(WINDOW *answer[ANS_COUNT],
                 break;
 
             case HANDLE_STOP:
-            default:
                 endwin();
                 finalize();
                 exit(APPLICATION_ERROR);
+
+            default:
+                break;
         }
     }
 }
@@ -548,6 +558,8 @@ char mainMenu(const char nickname[52])
                          * Selected 'Exit'
                          */
                         case 2:
+                            return APPLICATION_EXIT;
+
                         default:
                             return APPLICATION_EXIT;
                     }
