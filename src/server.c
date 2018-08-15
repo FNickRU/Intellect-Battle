@@ -14,7 +14,6 @@
 #include "room.h"
 #include "unit.h"
 
-#define PORT 1111
 #define USER_QUEUE_SIZE 4
 
 void init_server(int wnum, int rnum)
@@ -48,10 +47,11 @@ void init_server(int wnum, int rnum)
     }
 
     struct sockaddr_in server;
+
     memset(&server, 0, sizeof(struct sockaddr_in));
     server.sin_family = AF_INET;
-    server.sin_addr.s_addr = inet_addr("127.0.0.1");
-    server.sin_port = htons(PORT);
+    server.sin_addr.s_addr = inet_addr(SERVER_IP_STR);
+    server.sin_port = htons(SERVER_PORT);
 
     if (bind(Server.socket, (struct sockaddr *) &server, sizeof(server)) < 0) {
         server_error_handler(ERROR_BIND_SOCKET);

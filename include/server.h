@@ -5,7 +5,9 @@
 #define __SERVER_H
 
 #include <pthread.h>
+
 #include "unit.h"
+#include "const.h"
 
 #define ERROR_MSG_QUEUE     1
 #define ERROR_OUT_OF_MEMORY 2
