@@ -161,14 +161,13 @@ void main_menu_redraw(WINDOW *create_button,
     clear();
 
     box(create_button, 0, 0);
+    box(join_button, 0, 0);
+    box(exit_button, 0, 0);
+
     mvwprintw(create_button, 2,
               (MENU_CREATE_W / 2) - strlen("create game") / 2, "CREATE GAME");
-
-    box(join_button, 0, 0);
     mvwprintw(join_button, 2,
               (MENU_JOIN_W / 2) - strlen("join game") / 2, "JOIN GAME");
-
-    box(exit_button, 0, 0);
     mvwprintw(exit_button, 2,
               (MENU_EXIT_W / 2) - strlen("exit game") / 2, "EXIT GAME");
 
@@ -235,7 +234,7 @@ void wait_players(WINDOW *answer[ANS_COUNT],
                   WINDOW *system_info,
                   WINDOW *question_window)
 {
-    int returnCode = WAIT_MORE;
+    int errCode = WAIT_MORE;
     int error_handle;
 
     roominfo_t r_info;
@@ -249,14 +248,14 @@ void wait_players(WINDOW *answer[ANS_COUNT],
     pthread_t drawer;
     pthread_create(&drawer, 0, &progress_show, NULL);
 
-    while (returnCode == WAIT_MORE) {
-        returnCode = wait_for_players(&r_info);
+    while (errCode == WAIT_MORE) {
+        errCode = wait_for_players(&r_info);
 
-        while (returnCode == CODE_FAILURE) {
+        while (errCode == CODE_FAILURE) {
             error_handle = error_window(ERR_WAIT_FAIL, true);
             switch (error_handle) {
                 case HANDLE_RETRY:
-                    returnCode = wait_for_players(&r_info);
+                    errCode = wait_for_players(&r_info);
                     break;
 
                 case HANDLE_STOP:
@@ -281,9 +280,9 @@ void wait_players(WINDOW *answer[ANS_COUNT],
     clear();
     refresh();
 
-    returnCode = game_loop(answer, system_info, question_window, r_info);
+    errCode = game_loop(answer, system_info, question_window, r_info);
 
-    if (returnCode == CODE_FAILURE) {
+    if (errCode == CODE_FAILURE) {
         error_handle = error_window(ERR_CONN_FAIL, false);
         switch (error_handle) {
             case HANDLE_RETRY:
@@ -372,8 +371,8 @@ char select_size()
                  * Current condition detects all clicks under choices,
                  * but not higher than SPACER + BACK_BOX_H
                  */
-                if (ev.y >= SELECT_BOX_H * 3 + SPACER
-                    && ev.y < SELECT_BOX_H * 3 + SPACER + BACK_BOX_H) {
+                if (ev.y >= SELECT_BOX_H * 3 + SPACER &&
+                    ev.y < SELECT_BOX_H * 3 + SPACER + BACK_BOX_H) {
                     delete_wins(choices[0], choices[1], choices[2]);
                     delwin(back_button);
 

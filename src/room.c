@@ -23,7 +23,7 @@ void *room_fsm(void *arg)
 
     info->sync = SYNC_ON;
 
-    join_t join_req;
+    join_t msg;
     spack_t spack;
     cpack_t cpack;
 
@@ -45,8 +45,7 @@ void *room_fsm(void *arg)
 
                 bzero(&spack, sizeof(spack));
 
-                if (msgrcv(msgqid, &join_req, sizeof(join_req),
-                    MSG_ROOM, 0) < 0) {
+                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_ROOM, 0) < 0) {
                     printf("Room %lx: message queue failed! (Reason: %s)\n",
                            pthread_self(), strerror(errno));
 
@@ -54,12 +53,12 @@ void *room_fsm(void *arg)
                     break;
                 }
                 printf("Room %lx received connection from %x\n",
-                       pthread_self(), join_req.player.socket);
+                       pthread_self(), msg.player.socket);
 
 
-                room_size = join_req.room_size;
+                room_size = msg.room_size;
 
-                players[0] = join_req.player;
+                players[0] = msg.player;
                 score[0] = 0;
 
                 spack.type = S_WAIT;
@@ -86,8 +85,7 @@ void *room_fsm(void *arg)
                 printf("Room %lx wait for connection (%d/%d)\n",
                        pthread_self(), last_plr_id, room_size);
 
-                if (msgrcv(msgqid, &join_req, sizeof(join_req),
-                    MSG_JOIN, 0) < 0) {
+                if (msgrcv(msgqid, &msg, sizeof(msg), MSG_JOIN, 0) < 0) {
                     printf("Room %lx: message queue failed! (Reason: %s)\n",
                            pthread_self(), strerror(errno));
 
@@ -95,9 +93,9 @@ void *room_fsm(void *arg)
                     break;
                 }
                 printf("Room %lx received connection from %x\n",
-                       pthread_self(), join_req.player.socket);
+                       pthread_self(), msg.player.socket);
 
-                players[last_plr_id] = join_req.player;
+                players[last_plr_id] = msg.player;
                 score[last_plr_id] = 0;
 
                 spack.type = S_WAIT;
@@ -185,11 +183,11 @@ void *room_fsm(void *arg)
                 for (int id = 0; id < room_size; ++id) {
                     if (score[id] > PLR_LOST) {
                         if (recvfrom_user(players[id], &cpack,
-                            sizeof(cpack)) < 0) {
-                            score[id] = PLR_DISCONNECT;
+                                          sizeof(cpack)) < 0) {
+                              printf("Room %lx: Player %s disconnected!\n",
+                                     pthread_self(), players[id].username);
 
-                            printf("Room %lx: Player %s disconnected!\n",
-                                    pthread_self(), players[id].username);
+                              score[id] = PLR_DISCONNECT;
                         } else if (cpack.p_ans.ans == cur_unit->rans) {
                             score[id]++;
                         } else {
