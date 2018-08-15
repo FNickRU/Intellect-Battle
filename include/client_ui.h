@@ -135,7 +135,7 @@ char get_behaviour(const char *nickname,
  */
 void redraw_game_window(WINDOW *server_status,
                         WINDOW *question_window,
-                        WINDOW *answer[4]);
+                        WINDOW *answer[ANS_COUNT]);
 
 /**
  * Outputs nicknames of users in current room
@@ -145,7 +145,9 @@ void redraw_game_window(WINDOW *server_status,
  * @param bwindow reference to window, which would be used as input field.
  * Doesn't do anything (obsolete)
  */
-void print_nickname(roominfo_t *r_info, WINDOW *nicks[4], WINDOW *bwindow);
+void print_nickname(roominfo_t *r_info,
+                    WINDOW *nicks[USER_COUNT],
+                    WINDOW *bwindow);
 
 /**
  * Removes 3 windows at once (works like syntax sugar)
@@ -222,7 +224,7 @@ int error_window(int error_type, bool is_retryable);
  * @param system_info
  * @param question_window
  */
-void wait_players(WINDOW *answer[4],
+void wait_players(WINDOW *answer[ANS_COUNT],
                   WINDOW *system_info,
                   WINDOW *question_window);
 
